@@ -32,18 +32,6 @@ typedef struct{
     int quantidade;
 } TListaPizzas;
 
-typedef struct {
-    int codigoPizza;
-    int quantidade;
-    float precoUnitario;
-    float subtotal;
-} TPizzaPedido;
-
-typedef struct{
-    TPizzaPedido *itens;
-    int quantidade;
-} TListaPizzaPedido;
-
 // Protótipos das funções dos ingredientes
 
 void inicializarIngredientes(TIngredientes *ingredientes);
@@ -56,6 +44,8 @@ void liberarIngredientes(TIngredientes *ingredientes);
 void InicializarPizzas(TListaPizzas *pizzas);
 int cadastrarPizza(TListaPizzas *pizzas);
 void listarPizzas(const TListaPizzas *pizzas);
+void listarPizzasPorTamanho(const TListaPizzas *pizzas, TTamanhoPizza tamanho);
+void listarPizzasPorCategoria(const TListaPizzas *pizzas, TCategoriaPizza categoria);
 TPizza buscarPizzaCodigo(TListaPizzas *pizzas, int codigo);
 void buscarPizzaNome(TListaPizzas *pizzas, const char *nome);
 int alterarPizza(TListaPizzas *pizzas, int codigo);
@@ -65,5 +55,6 @@ void liberarPizzas(TListaPizzas *pizzas);
 //aux
 const char *nomeTamanho(TTamanhoPizza tamanho);
 const char *nomeCategoria(TCategoriaPizza categoria);
+void exibirPizza(const TPizza *pizza);
 
 #endif

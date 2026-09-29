@@ -28,6 +28,21 @@ int validarCPF(const char *cpf) {
         }
     }
 
+    //Verifica se os digitos são todos iguais
+
+    int todosIguais = 1;
+
+    for(int i = 1; i < 11; i++){
+        if(cpf[i] != cpf[0]){
+            todosIguais = 0;
+            break;
+        }
+    }
+
+    if(todosIguais){
+        return 0;
+    }
+
     // Validar ultimos dois digitos do cpf
     int soma = 0;
 
@@ -67,6 +82,40 @@ void exibirCPF(const char *cpf){
     printf("%.3s.%.3s.%.3s-%.2s\n", cpf, cpf + 3, cpf + 6, cpf + 9);
 }
 
+void exibirCliente(const TCliente *cliente){
+
+    printf("Nome: %s\n", cliente->nome);
+    printf("CPF: ");
+    exibirCPF(cliente->cpf);
+
+    printf("Data de nascimento: ");
+    exibirData(cliente->dataNascimento);
+
+    printf("Data de Cadastro: ");
+    exibirData(cliente->dtCadastro);
+
+    if(cliente->possuiCompra){
+        printf("Primeira Compra: ");
+        exibirData(cliente->PrimeiraCompra);
+
+        printf("Ultima compra: ");
+        exibirData(cliente->UltimaCompra);
+    }
+
+    printf("Endereco do cliente:\n");
+
+    printf("Logradouro: %s\n", cliente->endereco.logradouro);
+    printf("Número: %s\n", cliente->endereco.numero);
+    printf("Complemento: %s\n", cliente->endereco.complemento);
+    printf("Bairro: %s\n", cliente->endereco.bairro);
+    printf("Cidade: %s\n", cliente->endereco.cidade);
+    printf("Estado: %s\n", cliente->endereco.estado);
+    printf("CEP: ");
+    exibirCEP(cliente->endereco.cep);
+    printf("-------------------------\n");
+
+}
+
 int cadastrarCliente(TClientes *clientes){
 
     TCliente *temp;
@@ -90,14 +139,25 @@ int cadastrarCliente(TClientes *clientes){
     }
 
     printf("Digite o CPF do cliente (apenas números): ");
-    scanf("%11s", cliente->cpf);
-    limparBuffer();
+    
+    char *cpfDigitado = lerTexto();
 
-    if(!validarCPF(cliente->cpf)){
-        printf("CPF inválido!\n");
+    if(cpfDigitado == NULL){
+        printf("Erro ao alocar memoria para o CPF.\n");
         free(cliente->nome);
         return 0;
     }
+
+    if(!validarCPF(cpfDigitado)){
+        printf("CPF invalido!\n");
+        free(cpfDigitado);
+        free(cliente->nome);
+        return 0;
+    }
+
+    strncpy(cliente->cpf, cpfDigitado, 11);
+    cliente->cpf[11] = '\0';
+    free(cpfDigitado);
 
     if(cpfjaExiste(clientes, cliente->cpf)){
         printf("CPF já cadastrado!\n");
@@ -134,20 +194,7 @@ void listarClientes(TClientes *clientes){
         
         TCliente *cliente = &clientes->itens[i];
 
-        printf("Nome: %s\n", cliente->nome);
-        printf("CPF: ");        
-        exibirCPF(cliente->cpf); 
-        printf("Data de Nascimento: %02d/%02d/%04d\n", cliente->dataNascimento.dia, cliente->dataNascimento.mes, cliente->dataNascimento.ano);
-        printf("Endereço do cliente:\n");
-        printf("Logradouro: %s\n", cliente->endereco.logradouro);
-        printf("Número: %s\n", cliente->endereco.numero);
-        printf("Complemento: %s\n", cliente->endereco.complemento);
-        printf("Bairro: %s\n", cliente->endereco.bairro);
-        printf("Cidade: %s\n", cliente->endereco.cidade);
-        printf("Estado: %s\n", cliente->endereco.estado);
-        printf("CEP: ");
-        exibirCEP(cliente->endereco.cep);
-        printf("-------------------------\n");
+        exibirCliente(cliente);
     }
 }
 TCliente *buscarClienteCPF(TClientes *clientes, const char *cpf){
@@ -169,20 +216,7 @@ void buscarClienteNome(TClientes *clientes, const char *nome){
         if(strstr(clientes->itens[i].nome, nome) != NULL){
 
             printf("Cliente encontrado:\n");
-            printf("Nome: %s\n", clientes->itens[i].nome);
-            printf("CPF: ");        
-            exibirCPF(clientes->itens[i].cpf); 
-            printf("Data de Nascimento: %02d/%02d/%04d\n", clientes->itens[i].dataNascimento.dia, clientes->itens[i].dataNascimento.mes, clientes->itens[i].dataNascimento.ano);
-            printf("Endereço do cliente:\n");
-            printf("Logradouro: %s\n", clientes->itens[i].endereco.logradouro);
-            printf("Número: %s\n", clientes->itens[i].endereco.numero);
-            printf("Complemento: %s\n", clientes->itens[i].endereco.complemento);
-            printf("Bairro: %s\n", clientes->itens[i].endereco.bairro);
-            printf("Cidade: %s\n", clientes->itens[i].endereco.cidade);
-            printf("Estado: %s\n", clientes->itens[i].endereco.estado);
-            printf("CEP: ");
-            exibirCEP(clientes->itens[i].endereco.cep);
-            printf("-------------------------\n");
+            exibirCliente(&clientes->itens[i]);
 
             encontrou = 1;
         }
@@ -214,7 +248,14 @@ int alterarCliente(TClientes *clientes, const char *cpf){
         printf("3. Alterar endereço\n");
         printf("0. Voltar\n");
         printf("Escolha uma opção: ");
-        scanf("%d", &opcao);
+        
+        if(scanf("%d", &opcao) != 1){
+            printf("Entrada invalida!\n");
+            limparBuffer();
+            opcao = -1;
+            continue;
+        }
+
         limparBuffer();
 
         switch(opcao){

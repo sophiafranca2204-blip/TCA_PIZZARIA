@@ -22,6 +22,7 @@ typedef struct{
 
 //protótipos das funções
 
+void exibirCliente(const TCliente *cliente);
 void exibirCPF(const char *cpf);
 void inicializarClientes(TClientes *clientes);
 int cadastrarCliente(TClientes *clientes);

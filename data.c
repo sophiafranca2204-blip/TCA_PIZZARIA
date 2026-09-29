@@ -2,26 +2,58 @@
 #include "data.h"
 #include "util.h"
 
-void lerData(TData *data) {
+int lerData(TData *data) {
+
+    int r;
 
     do{
-        printf("Digite o dia: ");
-        scanf("%d", &data->dia);
-        limparBuffer(); // Limpa o buffer do teclado para evitar problemas com a leitura de strings
 
-        printf("Digite o mês: ");
-        scanf("%d", &data->mes);
-        limparBuffer();
+        data->dia = 0;
+        data->mes = 0;
+        data->ano = 0;
+
+        printf("Digite o dia: ");
+        r = lerInteiro(&data->dia);
+
+        if(r == -1){
+            return -1;
+        }
+
+        if(r == 0){
+            printf("Entrada invalida!\n");
+            continue;
+        }
+
+        printf("Digite o mes: ");
+        r = lerInteiro(&data->mes);
+
+        if(r == -1){
+            return -1;
+        }
+
+        if(r == 0){
+            printf("Entrada invalida!\n");
+            continue;
+        }
 
         printf("Digite o ano: ");
-        scanf("%d", &data->ano);
-        limparBuffer();
+        r = lerInteiro(&data->ano);
 
-        // data inválida
-        if(!validarData(*data)){
-            printf("Data inválida!\n");
+        if(r == -1){
+            return -1;
         }
-    }while(!validarData(*data));
+
+        if(r == 0){
+            printf("Entrada invalida!\n");
+            continue;
+        }
+
+        if(!validarData(*data)){
+            printf("Data invalida!\n");
+        }
+    } while(!validarData(*data));
+
+    return 1;
 }
 
 int validarData(TData data){
@@ -99,4 +131,8 @@ int compararDatas(TData data1, TData data2){
             }
         }
     }
+}
+
+void exibirData(TData data){
+    printf("%02d/%02d/%04d\n", data.dia, data.mes, data.ano);
 }

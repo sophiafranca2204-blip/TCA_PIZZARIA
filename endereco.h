@@ -14,7 +14,7 @@ typedef struct{
 }TEndereco;
 
 // Protótipos das funções
-void lerEndereco(TEndereco *endereco);
+int lerEndereco(TEndereco *endereco);
 void liberarEndereco(TEndereco *endereco);
 int validarCEP(const char *cep);
 void exibirCEP (const char *cep);

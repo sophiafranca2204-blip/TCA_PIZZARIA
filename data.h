@@ -9,8 +9,8 @@ typedef struct{
 } TData;
 
 //Protótipos das funções
-void lerData(TData *data);
+int lerData(TData *data);
 int validarData(TData data);
 int compararDatas(TData data1, TData data2);
-
+void exibirData(TData data);
 #endif
