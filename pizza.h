@@ -41,12 +41,12 @@ void liberarIngredientes(TIngredientes *ingredientes);
 
 // Protótipos das funções da pizza
 
-void InicializarPizzas(TListaPizzas *pizzas);
+void inicializarPizzas(TListaPizzas *pizzas);
 int cadastrarPizza(TListaPizzas *pizzas);
 void listarPizzas(const TListaPizzas *pizzas);
 void listarPizzasPorTamanho(const TListaPizzas *pizzas, TTamanhoPizza tamanho);
 void listarPizzasPorCategoria(const TListaPizzas *pizzas, TCategoriaPizza categoria);
-TPizza buscarPizzaCodigo(TListaPizzas *pizzas, int codigo);
+TPizza *buscarPizzaCodigo(TListaPizzas *pizzas, int codigo);
 void buscarPizzaNome(TListaPizzas *pizzas, const char *nome);
 int alterarPizza(TListaPizzas *pizzas, int codigo);
 int excluirPizza(TListaPizzas *pizzas, int codigo);

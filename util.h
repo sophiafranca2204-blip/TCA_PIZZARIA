@@ -5,5 +5,6 @@
 char *lerTexto(void);
 void limparBuffer(void);
 int lerInteiro(int *valor);
+int lerDecimal(float *valor);
 
 #endif

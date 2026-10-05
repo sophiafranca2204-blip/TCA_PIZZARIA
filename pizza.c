@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include <stdlib.h>
 #include "pizza.h"
 #include "data.h"
@@ -45,7 +44,7 @@ void listarIngredientes(const TIngredientes *ingredientes){
     }
 
     for(int i = 0; i < ingredientes->quantidade; i++){
-        printf("Ingrediente: %s\n", ingredientes->itens[i]);
+        printf("- %s\n", ingredientes->itens[i]);
     }
 }
 void liberarIngredientes(TIngredientes *ingredientes){
@@ -60,7 +59,7 @@ void liberarIngredientes(TIngredientes *ingredientes){
 }
 
 
-void InicializarPizzas(TListaPizzas *pizzas){
+void inicializarPizzas(TListaPizzas *pizzas){
 
     pizzas->itens = NULL;
     pizzas->quantidade = 0 ;
@@ -87,78 +86,91 @@ int cadastrarPizza(TListaPizzas *pizzas){
         return 0;
     }
 
-    do
-    {
+    if(strlen(pizza.nome) == 0){
+        printf("Nome da pizza nao pode ser vazio.\n");
+        free(pizza.nome);
+        return 0;
+    }
+
+    int r; 
+
+    do{
         printf("\nEscolha o tamanho da pizza:\n");
         printf("1 - Pequena\n");
         printf("2 - Media\n");
         printf("3 - Grande\n");
 
-        if (scanf("%d", &opcaoTamanho) != 1)
-        {
+        r = lerInteiro(&opcaoTamanho);
+
+        if(r == -1){
+            free(pizza.nome);
+            return 0;
+        }
+
+        if(r == 0){
             printf("Entrada invalida!\n");
-            limparBuffer();
+            opcaoTamanho = 0; // Reinicia a opção para forçar a repetição do loop
             continue;
         }
 
-        switch (opcaoTamanho)
-        {
-            case 1:
+        switch(opcaoTamanho){
+
+            case 1: 
                 pizza.tamanho = PEQUENA;
                 break;
-
-            case 2:
+            
+            case 2: 
                 pizza.tamanho = MEDIA;
                 break;
 
-            case 3:
+            case 3: 
                 pizza.tamanho = GRANDE;
                 break;
 
             default:
                 printf("Opcao invalida! Escolha entre 1 e 3.\n");
         }
+    } while(opcaoTamanho < 1 || opcaoTamanho > 3);
 
-    } while (opcaoTamanho < 1 || opcaoTamanho > 3);
+    do{
 
-    limparBuffer();
-    
-    do
-    {
-        printf("\n Escolha a categoria da pizza:\n");
-        printf("1 - TRADICIONAL\n");
-        printf("2 - ESPECIAL\n");
-        printf("3 - NOBRE\n");
+        printf("\nEscolha a categoria da pizza:\n");
+        printf("1 - Tradicional\n");
+        printf("2 - Especial\n");
+        printf("3 - Nobre\n");
 
-        if (scanf("%d", &opcaoCategoria) != 1)
-        {
+        r = lerInteiro(&opcaoCategoria);
+
+        if(r == -1){
+            free(pizza.nome);
+            return 0;
+        }
+
+        if(r == 0){
             printf("Entrada invalida!\n");
-            limparBuffer();
+            opcaoCategoria = 0; // Reinicia a opção para forçar a repetição do loop
             continue;
         }
 
         switch(opcaoCategoria){
-                
-            case 1:
+
+            case 1: 
                 pizza.categoria = TRADICIONAL;
                 break;
 
-            case 2:
+            case 2: 
                 pizza.categoria = ESPECIAL;
                 break;
-                
-            case 3: 
+
+            case 3:
                 pizza.categoria = NOBRE;
                 break;
-                
+
             default:
-                printf("Opcao invalida!\n");
+                printf("Opcao invalida! Escolha entre 1 e 3.\n");
                 break;
         }
-
-    }while(opcaoCategoria < 1 || opcaoCategoria > 3);
-
-    limparBuffer();
+    } while(opcaoCategoria < 1 || opcaoCategoria > 3);
 
     // ingredientes
 
@@ -195,19 +207,24 @@ int cadastrarPizza(TListaPizzas *pizzas){
 
         printf("Digite o preco da pizza: ");
 
-        if(scanf ( "%f", &pizza.preco) != 1){
-            printf("Entrada invalida!\n");
-            limparBuffer();
+        r = lerDecimal(&pizza.preco);
+
+        if(r == -1){
+            liberarIngredientes(&pizza.ingredientes);
+            free(pizza.nome);
+            return 0;
+        }
+
+        if(r == 0){
+            printf("Preco invalido! Digite um valor numerico positivo.\n");
+            pizza.preco = -1; // Reinicia o preço para forçar a repetição do loop
             continue;
         }
 
         if(pizza.preco <= 0){
-            printf("Valor invalido! Digite outro: ");
+            printf("Preco invalido! Digite um valor positivo.\n");
         }
-
     } while(pizza.preco <= 0);
-
-    limparBuffer();
 
     TPizza *temp;
 
@@ -313,29 +330,21 @@ void exibirPizza(const TPizza *pizza){
     printf("Codigo: %d\n",pizza->codigo);
     printf("Tamanho: %s\n", nomeTamanho(pizza->tamanho));
     printf("Categoria: %s\n", nomeCategoria(pizza->categoria));
-    printf("Ingredientes: ");
+    printf("Ingredientes:\n");
     listarIngredientes(&pizza->ingredientes);
     printf("Preco: %.2f\n", pizza->preco);
     printf("------------------------\n");
 }
 
-TPizza buscarPizzaCodigo(TListaPizzas *pizzas, int codigo){
+TPizza *buscarPizzaCodigo(TListaPizzas *pizzas, int codigo){
 
     for(int i = 0; i < pizzas->quantidade; i++){
         if(pizzas->itens[i].codigo == codigo){
-            return pizzas->itens[i];
+            return &pizzas->itens[i];
         }
     }
 
-    TPizza naoEncontrada;
-    naoEncontrada.codigo = -1;
-    naoEncontrada.nome = NULL;
-    naoEncontrada.preco = 0;
-    naoEncontrada.tamanho = PEQUENA;
-    naoEncontrada.categoria = TRADICIONAL;
-    inicializarIngredientes(&naoEncontrada.ingredientes);
-
-    return naoEncontrada;
+    return NULL;
 }
 
 void buscarPizzaNome(TListaPizzas *pizzas, const char *nome){
@@ -354,6 +363,7 @@ void buscarPizzaNome(TListaPizzas *pizzas, const char *nome){
         printf("Nenhuma pizza foi encontrada com o nome fornecido.\n");
     }
 }
+
 int alterarPizza(TListaPizzas *pizzas, int codigo){
     int indice = -1;
 
@@ -372,6 +382,7 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
     TPizza *pizza = &pizzas->itens[indice];
 
     int op = -1;
+    int r;
 
     do{
 
@@ -384,14 +395,18 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
         printf("0. Voltar\n");
         printf("Escolha uma opcao: ");
 
-        if(scanf("%d", &op) != 1){
+        r = lerInteiro(&op);
+
+        if(r == -1){
+            return 0;
+        }
+
+        if(r == 0){
             printf("Entrada invalida!\n");
-            limparBuffer();
-            op = -1;
+            op = -1; // Reinicia a opção para forçar a repetição do loop
             continue;
         }
 
-        limparBuffer();
 
         switch(op){
         
@@ -405,6 +420,12 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     return 0;
                 }
 
+                if(strlen(novoNome) == 0){
+                    printf("Nome da pizza nao pode ser vazio.\n");
+                    free(novoNome);
+                    break;
+                }
+
                 free(pizza->nome);
                 pizza->nome = novoNome;
                 break;
@@ -416,9 +437,15 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     printf("\nEscolha o novo tamanho:\n");
                     printf("1 - Pequena\n2 - Media\n3 - Grande\n");
 
-                    if(scanf("%d", &opcaoTam) != 1){
+                    r = lerInteiro(&opcaoTam);
+
+                    if(r == -1){
+                        return 0;
+                    }
+
+                    if(r == 0){
                         printf("Entrada invalida!\n");
-                        limparBuffer();
+                        opcaoTam = 0; // Reinicia a opção para forçar a repetição do loop
                         continue;
                     }
 
@@ -430,7 +457,6 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     }
                 } while(opcaoTam < 1 || opcaoTam > 3);
 
-                limparBuffer();
                 break;
             }
 
@@ -440,9 +466,15 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     printf("\nEscolha a nova categoria:\n");
                     printf("1 - Tradicional\n2 - Especial\n3 - Nobre\n");
 
-                    if(scanf("%d", &opcaoCat) != 1){
+                    r = lerInteiro(&opcaoCat);
+
+                    if(r == -1){
+                        return 0;
+                    }
+
+                    if(r == 0){
                         printf("Entrada invalida!\n");
-                        limparBuffer();
+                        opcaoCat = 0; // Reinicia a opção para forçar a repetição do loop
                         continue;
                     }
 
@@ -454,7 +486,6 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     }
                 } while(opcaoCat < 1 || opcaoCat > 3);
 
-                limparBuffer();
                 break;
             }
 
@@ -490,21 +521,25 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                 float novoPreco = -1;
 
                 do{
-                    printf("Digite o novo preco: \n");
 
-                    if(scanf("%f", &novoPreco) != 1){
-                        printf("Invalido!\n");
-                        limparBuffer();
+                    printf("Digite o novo preco da pizza: ");
+
+                    r = lerDecimal(&novoPreco);
+
+                    if(r == -1){
+                        return 0;
+                    }
+
+                    if(r == 0){
+                        printf("Preco invalido! Digite um valor numerico positivo.\n");
+                        novoPreco = -1; // Reinicia o preço para forçar a repetição do loop
                         continue;
                     }
 
                     if(novoPreco <= 0){
-                        printf("Preco invalido!\n");
+                        printf("Preco invalido! Digite um valor positivo.\n");
                     }
-                    
                 } while(novoPreco <= 0);
-
-                limparBuffer();
 
                 pizza->preco = novoPreco;
                 break;
