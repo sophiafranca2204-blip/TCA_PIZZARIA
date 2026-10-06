@@ -392,6 +392,7 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
         printf("3. Alterar categoria\n");
         printf("4. Alterar ingredientes\n");
         printf("5. Alterar preco\n");
+        printf("6. alterar codigo\n");
         printf("0. Voltar\n");
         printf("Escolha uma opcao: ");
 
@@ -545,6 +546,19 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                 break;
             }
 
+            case 6: {
+            printf("Digite a novo codigo:\n");
+
+            TPizza newCod;
+
+            if(lerInteiro(&newCod) != 1){
+                return 0;
+            }
+
+            pizza-> codigo = newCod.codigo;
+            break;
+            }
+
             case 0: 
                 printf("Voltando ao menu principal.\n");
                 break;
@@ -557,6 +571,7 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
 
     return 1;
 }
+
 int excluirPizza(TListaPizzas *pizzas, int codigo){
 
     int indice = -1;

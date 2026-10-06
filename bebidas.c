@@ -226,13 +226,223 @@ void exibirBebida(const TBebida *bebida){
 void listarBebidas(const TListaBebidas *bebidas){
     
     if(bebidas->quantidade == 0) {
-        printf("Nenhuma bebida cadastrada.\n");
+        printf("Nenhuma bebida cadastrada.\n"); 
         return;
     }
 
     for(int i = 0; i < bebidas->quantidade; i++){
-        exibirBebida(&bebidas->itens[i]);
+        exibirBebida(&bebidas->itens[i]); 
     }
+}
+
+TBebida *buscarBebidaCodigo(TListaBebidas *bebidas, int codigo){
+    
+    for(int i = 0; i < bebidas->quantidade; i++){
+
+        if(bebidas->itens[i].codigoBebida == codigo){
+
+            return &bebidas->itens[i];
+        }
+    }
+
+    return NULL;
+}
+
+void buscarBebidaNome(TListaBebidas *bebidas, const char *nome){
+
+    int encontrou = 0;
+
+    for(int i = 0; i < bebidas->quantidade; i++){
+        if(strstr(bebidas->itens[i].nome, nome)){
+            printf("Bebida encontrada\n");
+            exibirBebida(&bebidas-> itens[i]);
+            encontrou = 1;
+
+        }
+    }
+}
+
+int alterarBebida(TListaBebidas *bebidas, int codigo){
+     int indice = -1;
+
+    for(int i = 0; i < bebidas->quantidade; i++){
+        if(bebidas->itens[i].codigoBebida == codigo){
+            indice = i;
+            break;
+        }
+    }
+
+    if(indice == -1){
+        printf("Bebida nao encontrada.\n");
+        return 0;
+    }
+
+    TBebida *bebida = &bebidas->itens[indice];
+
+    int op = -1;
+    int r;
+
+    do{
+
+        printf("\n ---- Menu de alteração de Bebida ---- \n");
+        printf("1. Alterar nome\n");
+        printf("2. Alterar codigo\n");
+        printf("3. Alterar tipo\n");
+        printf("5. Alterar preco\n");
+        printf("0. Voltar\n");
+        printf("Escolha uma opcao: ");
+
+        r = lerInteiro(&op);
+
+        if(r == -1){
+            return 0;
+        }
+
+        if(r == 0){
+            printf("Entrada invalida!\n");
+            op = -1; // Reinicia a opção para forçar a repetição do loop
+            continue;
+        }
+
+
+        switch(op){
+        
+            case 1:
+                printf("Digite o novo nome: ");
+
+                char *novoNome = lerTexto();
+
+                if(novoNome == NULL){
+                    printf("Erro ao alocar memoria para o novo nome.\n");
+                    return 0;
+                }
+
+                if(strlen(novoNome) == 0){
+                    printf("Nome da bebida nao pode ser vazio.\n");
+                    free(novoNome);
+                    break;
+                }
+
+                free(bebida->nome);
+                bebida->nome = novoNome;
+                break;
+            
+            case 2: {
+            printf("Digite a novo codigo:\n");
+
+            TBebida newCod;
+
+            if(lerInteiro(&newCod) != 1){
+                return 0;
+            }
+
+            bebida-> codigoBebida = newCod.codigoBebida;
+            break;
+            }
+
+            case 3:{
+                int opcaoTip = 0;
+                do{
+                    printf("\nEscolha a novo tipo:\n");
+                    printf("1 - NAO_ALCOOLICA\n2 - ALCOOLICA\n ");
+
+                    r = lerInteiro(&opcaoTip);
+
+                    if(r == -1){
+                        return 0;
+                    }
+
+                    if(r == 0){
+                        printf("Entrada invalida!\n");
+                        opcaoTip = 0; // Reinicia a opção para forçar a repetição do loop
+                        continue;
+                    }
+
+                    switch(opcaoTip){
+                        case 1: bebida->tipo = NAO_ALCOOLICA; break;
+                        case 2: bebida->tipo = ALCOOLICA; break;
+                        default: printf("Opcao invalida!\n");
+                    }
+                } while(opcaoTip < 1 || opcaoTip > 2);
+
+                break;
+            }
+
+
+            case 5: {
+                
+                float novoPreco = -1;
+
+                do{
+
+                    printf("Digite o novo preco da bebida: ");
+
+                    r = lerDecimal(&novoPreco);
+
+                    if(r == -1){
+                        return 0;
+                    }
+
+                    if(r == 0){
+                        printf("Preco invalido! Digite um valor numerico positivo.\n");
+                        novoPreco = -1; // Reinicia o preço para forçar a repetição do loop
+                        continue;
+                    }
+
+                    if(novoPreco <= 0){
+                        printf("Preco invalido! Digite um valor positivo.\n");
+                    }
+                } while(novoPreco <= 0);
+
+                bebida->preco = novoPreco;
+                break;
+            }
+
+            case 0: 
+                printf("Voltando ao menu principal.\n");
+                break;
+            
+            default: 
+                printf("Opcao invalida!\n");
+                break;
+        }
+    } while(op != 0);
+
+    return 1;
+}
+
+int excluirBebida(TListaBebidas *bebidas, int codigo){
+
+     int indice = -1;
+
+    for(int i = 0; i < bebidas->quantidade; i++){
+        if(bebidas->itens[i].codigoBebida == codigo){
+            indice = i;
+            break;
+        }
+    }
+
+    if(indice == -1){
+        printf("Bebida nao encontrada.\n");
+        return 0;
+    }
+    bebidas->quantidade--;
+
+    if(bebidas->quantidade == 0){
+        free(bebidas->itens);
+        bebidas->itens = NULL;
+    }
+    else{
+        TBebida *temp = realloc(bebidas->itens, bebidas->quantidade *sizeof(TBebida));
+
+        if(temp == NULL){
+            printf("Erro ao alocar memoria para as bebidas.\n");
+            return 0;
+        }
+
+       bebidas->itens = temp;
+    }
+    return 1;
 }
 
 void liberarBebidas(TListaBebidas *bebidas){
