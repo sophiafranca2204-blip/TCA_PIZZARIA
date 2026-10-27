@@ -16,7 +16,7 @@ int adicionarIngrediente(TIngredientes *ingredientes, const char *ingrediente){
     temp = realloc(ingredientes->itens, (ingredientes->quantidade + 1) *sizeof(char *));
 
     if(temp == NULL){
-        printf("Erro ao alocar memória para o ingrediente.\n");
+        printf("Erro ao alocar memoria para o ingrediente.\n");
         return 0; 
     }
 
@@ -192,12 +192,20 @@ int cadastrarPizza(TListaPizzas *pizzas){
         tam = strlen(ingrediente);
 
         if(tam != 0){
-            adicionarIngrediente(&pizza.ingredientes, ingrediente);
+            if(adicionarIngrediente(&pizza.ingredientes, ingrediente) == 0){
+                free(ingrediente);
+                liberarIngredientes(&pizza.ingredientes);
+                free(pizza.nome);
+                return 0;
+            }
+        }
+        else if(pizza.ingredientes.quantidade == 0){
+            printf("A pizza precisa ter pelo menos um ingrediente.\n");
         }
 
         free(ingrediente);
 
-    }while(tam != 0);
+    }while(tam != 0 || pizza.ingredientes.quantidade == 0);
 
     //preço da pizza
 
@@ -242,6 +250,7 @@ int cadastrarPizza(TListaPizzas *pizzas){
     pizzas->itens[pizzas->quantidade] = pizza;
     pizzas->quantidade++;
 
+    printf("Pizza cadastrada com sucesso!\n");
     return 1;
 }
 
@@ -332,7 +341,7 @@ void exibirPizza(const TPizza *pizza){
     printf("Categoria: %s\n", nomeCategoria(pizza->categoria));
     printf("Ingredientes:\n");
     listarIngredientes(&pizza->ingredientes);
-    printf("Preco: %.2f\n", pizza->preco);
+    printf("Preco: R$ %.2f\n", pizza->preco);
     printf("------------------------\n");
 }
 
@@ -383,16 +392,16 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
 
     int op = -1;
     int r;
+    int alterou = 0;
 
     do{
 
-        printf("\n ---- Menu de alteração de pizza ---- \n");
+        printf("\n ---- Menu de alteracao de pizza ---- \n");
         printf("1. Alterar nome\n");
         printf("2. Alterar tamanho\n");
         printf("3. Alterar categoria\n");
         printf("4. Alterar ingredientes\n");
         printf("5. Alterar preco\n");
-        printf("6. alterar codigo\n");
         printf("0. Voltar\n");
         printf("Escolha uma opcao: ");
 
@@ -411,7 +420,7 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
 
         switch(op){
         
-            case 1:
+            case 1:{
                 printf("Digite o novo nome: ");
 
                 char *novoNome = lerTexto();
@@ -429,10 +438,12 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
 
                 free(pizza->nome);
                 pizza->nome = novoNome;
+                alterou = 1;
                 break;
-            
+            }
             case 2: {
                 int opcaoTam = 0;
+                TTamanhoPizza tamanhoAntigo = pizza->tamanho;
 
                 do{
                     printf("\nEscolha o novo tamanho:\n");
@@ -454,15 +465,21 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                         case 1: pizza->tamanho = PEQUENA; break;
                         case 2: pizza->tamanho = MEDIA; break;
                         case 3: pizza->tamanho = GRANDE; break;
-                        default: printf("OPcao invalida!\n");
+                        default: printf("Opcao invalida!\n");
                     }
                 } while(opcaoTam < 1 || opcaoTam > 3);
+
+                if(pizza->tamanho != tamanhoAntigo){
+                    alterou = 1;
+                }
 
                 break;
             }
 
             case 3:{
                 int opcaoCat = 0;
+                TCategoriaPizza categoriaAntiga = pizza->categoria;
+
                 do{
                     printf("\nEscolha a nova categoria:\n");
                     printf("1 - Tradicional\n2 - Especial\n3 - Nobre\n");
@@ -485,13 +502,20 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                         case 3: pizza->categoria = NOBRE; break;
                         default: printf("Opcao invalida!\n");
                     }
+
                 } while(opcaoCat < 1 || opcaoCat > 3);
+
+                if(pizza->categoria != categoriaAntiga){
+                    alterou = 1;
+                }
 
                 break;
             }
 
             case 4: {
-                liberarIngredientes(&pizza->ingredientes);
+
+                TIngredientes novos;
+                inicializarIngredientes(&novos);
 
                 char *ingrediente;
                 int tam;
@@ -501,18 +525,29 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     ingrediente = lerTexto();
                     
                     if(ingrediente == NULL){
-                        printf("Erro ao alocar memoria para o ingrediente.\n");
+                        liberarIngredientes(&novos);
                         return 0;
                     }
 
                     tam = strlen(ingrediente);
 
                     if(tam != 0){
-                        adicionarIngrediente(&pizza->ingredientes, ingrediente);
+                        if(adicionarIngrediente(&novos, ingrediente) == 0){
+                            free(ingrediente);
+                            liberarIngredientes(&novos);
+                            return 0;
+                        }
                     }
-
+                    else if(novos.quantidade == 0){
+                        printf("A pizza precisa ter pelo menos um ingrediente.\n");
+                    }
                     free(ingrediente);
-                } while(tam != 0);
+
+                } while(tam != 0 || novos.quantidade == 0);
+
+                liberarIngredientes(&pizza->ingredientes);
+                pizza->ingredientes = novos;
+                alterou = 1;
 
                 break;
             }
@@ -543,20 +578,8 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                 } while(novoPreco <= 0);
 
                 pizza->preco = novoPreco;
+                alterou = 1;
                 break;
-            }
-
-            case 6: {
-            printf("Digite a novo codigo:\n");
-
-            TPizza newCod;
-
-            if(lerInteiro(&newCod) != 1){
-                return 0;
-            }
-
-            pizza-> codigo = newCod.codigo;
-            break;
             }
 
             case 0: 
@@ -568,6 +591,13 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                 break;
         }
     } while(op != 0);
+
+    if(alterou){
+        printf("Pizza alterada com sucesso!\n");
+    }
+    else{
+        printf("Nenhuma alteracao feita.\n");
+    }
 
     return 1;
 }
@@ -604,13 +634,12 @@ int excluirPizza(TListaPizzas *pizzas, int codigo){
     else{
         TPizza *temp = realloc(pizzas->itens, pizzas->quantidade *sizeof(TPizza));
 
-        if(temp == NULL){
-            printf("Erro ao alocar memoria para as pizzas.\n");
-            return 0;
+        if(temp != NULL){
+            pizzas->itens = temp;
         }
-
-       pizzas->itens = temp;
     }
+
+    printf("Pizza excluida com sucesso!\n");
     return 1;
 }
 void liberarPizzas(TListaPizzas *pizzas){

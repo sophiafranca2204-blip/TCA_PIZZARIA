@@ -37,7 +37,7 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
     if(strlen(bebida.nome) == 0){
 
-        printf("Nome da bebida não pode ser vazio.\n");
+        printf("Nome da bebida nao pode ser vazio.\n");
         free(bebida.nome);
         return 0;
     }
@@ -49,7 +49,7 @@ int cadastrarBebida(TListaBebidas *bebidas){
     do{
 
         printf("\nEscolha o tipo da bebida:\n");
-        printf("1 - Não Alcoolica\n");
+        printf("1 - Nao Alcoolica\n");
         printf("2 - Alcoolica\n");
 
         r = lerInteiro(&opcaoTipoBebida);
@@ -62,7 +62,7 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
         if(r == 0){
 
-            printf("Entrada inválida. Digite um número inteiro.\n");
+            printf("Entrada invalida. Digite um numero inteiro.\n");
             opcaoTipoBebida = 0; // Reinicia a opção para continuar o loop
             continue;
         }
@@ -81,20 +81,18 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
             default:
                 
-                printf("Opção inválida. Escolha novamente.\n");
+                printf("Opcao invalida. Escolha novamente.\n");
                 break;
         }
     } while(opcaoTipoBebida < 1 || opcaoTipoBebida > 2);
 
     // Teor alcoólico(apenas para bebidas alcoólicas)
 
-    bebida.teorAlcoolico = 0.0; // Inicializa o teor alcoólico como 0.0
-
     if(bebida.tipo == ALCOOLICA) {
 
         do{
 
-            printf("Digite o teor alcoólico da bebida (em %%): ");
+            printf("Digite o teor alcoolico da bebida (em %%): ");
 
             r = lerDecimal(&bebida.teorAlcoolico);
 
@@ -106,14 +104,14 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
             if(r == 0){
 
-                printf("Entrada inválida. Digite um número decimal.\n");
+                printf("Entrada invalida. Digite um numero decimal.\n");
                 bebida.teorAlcoolico = -1.0; 
                 continue;
             }
 
             if(bebida.teorAlcoolico < 0.0 || bebida.teorAlcoolico > 100.0){
 
-                printf("Teor alcoólico inválido. Digite um valor entre 0 e 100.\n");
+                printf("Teor alcoolico invalido. Digite um valor entre 0 e 100.\n");
             }
         } while(bebida.teorAlcoolico < 0.0 || bebida.teorAlcoolico > 100.0);
     }
@@ -135,14 +133,14 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
         if(r == 0){
 
-            printf("Entrada inválida. Digite um número inteiro.\n");
+            printf("Entrada invalida. Digite um numero inteiro.\n");
             bebida.volumeMl = 0;
             continue;
         }
 
         if(bebida.volumeMl <= 0){
 
-            printf("Volume inválido. Digite um valor maior que 0.\n");
+            printf("Volume invalido. Digite um valor maior que 0.\n");
         }
     } while(bebida.volumeMl <= 0);
 
@@ -164,14 +162,14 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
         if(r == 0){
 
-            printf("Entrada inválida. Digite um número decimal.\n");
+            printf("Entrada invalida. Digite um numero decimal.\n");
             bebida.preco = -1.0; // Reinicia o preço para continuar o loop
             continue;
         }
 
         if(bebida.preco <= 0.0){
 
-            printf("Preço inválido. Digite um valor maior que zero.\n");
+            printf("Preco invalido. Digite um valor maior que zero.\n");
         }
     } while(bebida.preco <= 0.0);
 
@@ -181,7 +179,7 @@ int cadastrarBebida(TListaBebidas *bebidas){
 
     if(novaLista == NULL){
 
-        printf("Erro ao alocar memória para a nova bebida.\n");
+        printf("Erro ao alocar memoria para a nova bebida.\n");
         free(bebida.nome);
         return 0;
     }
@@ -190,18 +188,19 @@ int cadastrarBebida(TListaBebidas *bebidas){
     bebidas->itens[bebidas->quantidade] = bebida;
     bebidas->quantidade++;
 
+    printf("Bebida cadastrada com sucesso!\n");
     return 1; // Sucesso
 }
 
-const char *nomeTipo(TTipobebida tipo){
+const char *nomeTipo(TTipoBebida tipo){
 
     switch(tipo){
 
         case NAO_ALCOOLICA:
-            return "Não Alcoólica";
+            return "Nao Alcoolica";
 
         case ALCOOLICA:
-            return "Alcoólica";
+            return "Alcoolica";
 
         default:
             return "Tipo desconhecido";
@@ -215,11 +214,11 @@ void exibirBebida(const TBebida *bebida){
     printf("Tipo: %s\n", nomeTipo(bebida->tipo));
 
     if(bebida->tipo == ALCOOLICA) {
-        printf("Teor Alcoólico: %.1f%%\n", bebida->teorAlcoolico);
+        printf("Teor Alcoolico: %.1f%%\n", bebida->teorAlcoolico);
     }
 
     printf("Volume: %d ml\n", bebida->volumeMl);
-    printf("Preço: R$ %.2f\n", bebida->preco);
+    printf("Preco: R$ %.2f\n", bebida->preco);
     printf("-------------------------\n");
 }
 
@@ -233,6 +232,26 @@ void listarBebidas(const TListaBebidas *bebidas){
     for(int i = 0; i < bebidas->quantidade; i++){
         exibirBebida(&bebidas->itens[i]); 
     }
+}
+
+void listarBebidasPorTipo(const TListaBebidas *bebidas, TTipoBebida tipo){
+
+    int encontrou = 0;
+
+    printf("\n--- Bebidas: %s ---\n", nomeTipo(tipo));
+
+    for(int i = 0; i < bebidas->quantidade; i++){
+
+        if(bebidas->itens[i].tipo == tipo){
+            exibirBebida(&bebidas->itens[i]);
+            encontrou = 1;
+        }
+    }
+
+    if(!encontrou){
+        printf("Nenhuma bebida desse tipo cadastrada.\n");
+    }
+    
 }
 
 TBebida *buscarBebidaCodigo(TListaBebidas *bebidas, int codigo){
@@ -260,6 +279,10 @@ void buscarBebidaNome(TListaBebidas *bebidas, const char *nome){
 
         }
     }
+
+    if(!encontrou){
+        printf("Nenhuma bebida encontrada com o nome fornecido.\n");
+    }
 }
 
 int alterarBebida(TListaBebidas *bebidas, int codigo){
@@ -281,14 +304,15 @@ int alterarBebida(TListaBebidas *bebidas, int codigo){
 
     int op = -1;
     int r;
+    int alterou = 0;
 
     do{
 
-        printf("\n ---- Menu de alteração de Bebida ---- \n");
+        printf("\n ---- Menu de alteracao de Bebida ---- \n");
         printf("1. Alterar nome\n");
-        printf("2. Alterar codigo\n");
-        printf("3. Alterar tipo\n");
-        printf("5. Alterar preco\n");
+        printf("2. Alterar tipo\n");
+        printf("3. Alterar preco\n");
+        printf("4. Alterar volume\n");
         printf("0. Voltar\n");
         printf("Escolha uma opcao: ");
 
@@ -307,7 +331,7 @@ int alterarBebida(TListaBebidas *bebidas, int codigo){
 
         switch(op){
         
-            case 1:
+            case 1:{
                 printf("Digite o novo nome: ");
 
                 char *novoNome = lerTexto();
@@ -325,26 +349,14 @@ int alterarBebida(TListaBebidas *bebidas, int codigo){
 
                 free(bebida->nome);
                 bebida->nome = novoNome;
+                alterou = 1;
                 break;
-            
-            case 2: {
-            printf("Digite a novo codigo:\n");
-
-            TBebida newCod;
-
-            if(lerInteiro(&newCod) != 1){
-                return 0;
             }
-
-            bebida-> codigoBebida = newCod.codigoBebida;
-            break;
-            }
-
-            case 3:{
+            case 2:{
                 int opcaoTip = 0;
                 do{
-                    printf("\nEscolha a novo tipo:\n");
-                    printf("1 - NAO_ALCOOLICA\n2 - ALCOOLICA\n ");
+                    printf("\nEscolha o novo tipo:\n");
+                    printf("1 - Nao alcoolica\n2 - Alcoolica\n");
 
                     r = lerInteiro(&opcaoTip);
 
@@ -358,18 +370,58 @@ int alterarBebida(TListaBebidas *bebidas, int codigo){
                         continue;
                     }
 
-                    switch(opcaoTip){
-                        case 1: bebida->tipo = NAO_ALCOOLICA; break;
-                        case 2: bebida->tipo = ALCOOLICA; break;
-                        default: printf("Opcao invalida!\n");
+                    if(opcaoTip < 1 || opcaoTip > 2){
+
+                        printf("Opcao de escolha invalida!\n");
                     }
+
+
                 } while(opcaoTip < 1 || opcaoTip > 2);
+
+                if(opcaoTip == 1){
+                    
+                    if(bebida->tipo != NAO_ALCOOLICA){
+                        bebida->tipo = NAO_ALCOOLICA;
+                        bebida->teorAlcoolico = 0.0;
+                        alterou = 1;
+                    }
+                }
+
+                else if(bebida->tipo != ALCOOLICA){
+
+                    float novoTeor = -1.0;
+
+                    do{
+
+                        printf("Digite o novo teor da bebida (em %%): ");
+
+                        r = lerDecimal(&novoTeor);
+
+                        if(r == -1){
+                            return 0;
+                        }
+
+                        if(r == 0){
+                            printf("Entrada invalida. Digite um numero decimal.\n");
+                            novoTeor = -1.0;
+                            continue;
+                        }
+
+                        if(novoTeor < 0.0 || novoTeor > 100.0){
+                            printf("Teor invalido! Digite um valor que esteja entre 0 e 100.\n");
+                        }
+
+                    } while(novoTeor < 0.0 || novoTeor > 100.0);
+
+                    bebida->tipo = ALCOOLICA;
+                    alterou = 1;
+                    bebida->teorAlcoolico = novoTeor;
+                }
 
                 break;
             }
 
-
-            case 5: {
+            case 3: {
                 
                 float novoPreco = -1;
 
@@ -395,6 +447,36 @@ int alterarBebida(TListaBebidas *bebidas, int codigo){
                 } while(novoPreco <= 0);
 
                 bebida->preco = novoPreco;
+                alterou = 1;
+                break;
+            }
+
+            case 4: {
+                int novoVolume = -1;
+
+                do{
+
+                    printf("Digite o novo volume da bebida(em ml): ");
+
+                    r = lerInteiro(&novoVolume);
+
+                    if(r == -1){
+                        return 0;
+                    }
+
+                    if(r == 0){
+                        printf("Volume invalido! Digite um valor numerico inteiro.\n");
+                        novoVolume = -1; 
+                        continue;
+                    }
+
+                    if(novoVolume <= 0){
+                        printf("Volume invalido! Digite um valor positivo.\n");
+                    }
+                } while(novoVolume <= 0);
+
+                bebida->volumeMl = novoVolume;
+                alterou = 1;
                 break;
             }
 
@@ -408,6 +490,12 @@ int alterarBebida(TListaBebidas *bebidas, int codigo){
         }
     } while(op != 0);
 
+    if(alterou){
+        printf("Bebida alterada com sucesso!\n");
+    }
+    else{
+        printf("Nenhuma alteracao feita.\n");
+    }
     return 1;
 }
 
@@ -426,22 +514,28 @@ int excluirBebida(TListaBebidas *bebidas, int codigo){
         printf("Bebida nao encontrada.\n");
         return 0;
     }
+
+    free(bebidas->itens[indice].nome);
+
+    for(int i = indice; i < bebidas->quantidade - 1; i++){
+        bebidas->itens[i] = bebidas->itens[i + 1];
+    }
+
     bebidas->quantidade--;
 
     if(bebidas->quantidade == 0){
-        free(bebidas->itens);
+        free(bebidas->itens); 
         bebidas->itens = NULL;
     }
     else{
         TBebida *temp = realloc(bebidas->itens, bebidas->quantidade *sizeof(TBebida));
 
-        if(temp == NULL){
-            printf("Erro ao alocar memoria para as bebidas.\n");
-            return 0;
+        if(temp != NULL){
+               bebidas->itens = temp;
         }
-
-       bebidas->itens = temp;
     }
+
+    printf("Bebida excluida com sucesso!\n");
     return 1;
 }
 

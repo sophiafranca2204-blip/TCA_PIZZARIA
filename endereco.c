@@ -23,7 +23,7 @@ int lerEndereco(TEndereco *endereco) {
         return 0;
     }
 
-    printf("Digite o número: ");
+    printf("Digite o numero: ");
     endereco->numero = lerTexto();
 
     if(endereco->numero == NULL){
@@ -71,7 +71,7 @@ int lerEndereco(TEndereco *endereco) {
     int cepValido = 0;
 
     do {
-        printf("Digite o CEP (apenas números): ");
+        printf("Digite o CEP (apenas numeros): ");
         char *cep = lerTexto();
 
         if(cep == NULL){

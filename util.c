@@ -26,6 +26,10 @@ char *lerTexto(void){
         return NULL;   // a entrada acabou e nada foi lido
     }
 
+    while(tamanho > 0 && (texto[tamanho - 1] == ' ' || texto[tamanho - 1] == '\t')){
+        tamanho--;
+    }
+
     char *final = realloc(texto, (tamanho + 1) *sizeof(char));
 
     if(final == NULL){
@@ -39,25 +43,35 @@ char *lerTexto(void){
     return texto;
 }
 void limparBuffer(void) {
+    
     int c;
-    while ((c = getchar()) != '\n' && c != EOF)
-        ; // descarta o caractere
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
-int lerInteiro(int *valor){ // Função para ler um inteiro do usuário
-    int resultado = scanf("%d", valor); // Lê um inteiro do usuário e armazena em 'valor'
+int lerInteiro(int *valor){
 
-    if(resultado == EOF){ // Verifica se ocorreu um erro de leitura
+    int resultado = scanf("%d", valor);
+
+    if(resultado == EOF){
         return -1;
     }
 
-    limparBuffer(); // Limpa o buffer de entrada para evitar problemas com leituras subsequentes
+    if(resultado == 1){
 
-    if(resultado == 1){ // Se a leitura foi bem-sucedida, retorna 1
-        return 1;
+        int proximo = getchar();
+
+        if(proximo == '\n' || proximo == EOF){
+            return 1;
+        }
+
+        // sobrou lixo depois do número (ex: 12abc)
+        limparBuffer();
+        return 0;
     }
 
-    return 0; // Se a leitura falhou, retorna 0
+    // o scanf falhou: o texto não começava com um número
+    limparBuffer();
+    return 0;
 }
 
 int lerDecimal(float *valor){

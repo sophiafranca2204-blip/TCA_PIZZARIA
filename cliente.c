@@ -105,7 +105,7 @@ void exibirCliente(const TCliente *cliente){
     printf("Endereco do cliente:\n");
 
     printf("Logradouro: %s\n", cliente->endereco.logradouro);
-    printf("Número: %s\n", cliente->endereco.numero);
+    printf("Numero: %s\n", cliente->endereco.numero);
     printf("Complemento: %s\n", cliente->endereco.complemento);
     printf("Bairro: %s\n", cliente->endereco.bairro);
     printf("Cidade: %s\n", cliente->endereco.cidade);
@@ -118,25 +118,38 @@ void exibirCliente(const TCliente *cliente){
 
 int cadastrarCliente(TClientes *clientes){
 
-    printf("Digite o CPF do cliente (somente numeros): ");
-    char *cpfDigitado = lerTexto();
+    char *cpfDigitado;
+    int cpfOk = 0;
 
-    if(cpfDigitado == NULL){
-        printf("Erro ao ler memoria para o CPF.\n");
-        return 0;
-    }
+    do{
 
-    if(!validarCPF(cpfDigitado)){
-        printf("CPF invalido.\n");
-        free(cpfDigitado);
-        return 0;
-    }
+        printf("Digite o cpf do cliente(apenas numeros, vazio cancela): ");
+        cpfDigitado = lerTexto();
 
-    if(cpfjaExiste(clientes, cpfDigitado)){
-        printf("CPF já cadastrado.\n");
-        free(cpfDigitado);
-        return 0;
-    }
+        if(cpfDigitado == NULL){
+            printf("Erro ao ler o CPF.\n");
+            return 0;
+        }
+
+        if(strlen(cpfDigitado) == 0){
+            printf("Cadastro cancelado.\n");
+            free(cpfDigitado);
+            return 0;
+        }
+
+        if(!validarCPF(cpfDigitado)){
+            printf("CPF invalido! Digite novamente.\n");
+            free(cpfDigitado);
+        }
+        else if(cpfjaExiste(clientes, cpfDigitado)){
+            printf("CPF ja cadastrado! Digite novamente.\n");
+            free(cpfDigitado);
+        }
+        else{
+            cpfOk = 1;
+        }
+
+    }while(!cpfOk);
 
     TCliente *temp = realloc(clientes->itens, (clientes->quantidade + 1) *sizeof(TCliente));
 
@@ -162,7 +175,7 @@ int cadastrarCliente(TClientes *clientes){
     }
 
     if(strlen(novoCliente->nome) == 0){
-        printf("Nome do cliente não pode ser vazio.\n");
+        printf("Nome do cliente nao pode ser vazio.\n");
         free(novoCliente->nome);
         return 0;
     }
@@ -245,25 +258,27 @@ void buscarClienteNome(TClientes *clientes, const char *nome){
 
 int alterarCliente(TClientes *clientes, const char *cpf){
 
-    printf("Alterar cliente com CPF: %s\n", cpf);
-
     TCliente *cliente = buscarClienteCPF(clientes, cpf);
 
     if(cliente == NULL){
-        printf("Cliente não encontrado.\n");
+        printf("Cliente nao encontrado.\n");
         return 0;
     }
 
+    printf("Alterar cliente com CPF: ");
+    exibirCPF(cpf);
+
     int opcao = -1;
+    int alterou = 0;
 
     do{
 
-        printf("\n ---- Menu de Alteração de Cliente ----\n");
+        printf("\n ---- Menu de Alteracao de Cliente ----\n");
         printf("1. Alterar nome\n");
         printf("2. Alterar data de nascimento\n");
-        printf("3. Alterar endereço\n");
+        printf("3. Alterar endereco\n");
         printf("0. Voltar\n");
-        printf("Escolha uma opção: ");
+        printf("Escolha uma opcao: ");
 
         int r = lerInteiro(&opcao);
 
@@ -295,8 +310,14 @@ int alterarCliente(TClientes *clientes, const char *cpf){
                 break;
             }
 
+            if(strcmp(novoNome, cliente->nome) == 0){
+                free(novoNome);
+                break;
+            }
+
             free(cliente->nome);
             cliente->nome = novoNome;
+            alterou = 1;
             break;
         }
 
@@ -309,12 +330,16 @@ int alterarCliente(TClientes *clientes, const char *cpf){
                 return 0;
             }
 
+            if(compararDatas(novaData, cliente->dataNascimento) != 0){
+                alterou = 1;
+            }
+
             cliente->dataNascimento = novaData;
             break;
         }
 
         case 3: {
-            printf("Digite o novo endereço:\n");
+            printf("Digite o novo endereco:\n");
 
             TEndereco novoEndereco;
 
@@ -324,6 +349,7 @@ int alterarCliente(TClientes *clientes, const char *cpf){
 
             liberarEndereco(&cliente->endereco);
             cliente->endereco = novoEndereco;
+            alterou = 1;
             break;
         }
 
@@ -332,12 +358,18 @@ int alterarCliente(TClientes *clientes, const char *cpf){
             break;
 
         default:
-            printf("Opção inválida.\n");
+            printf("Opcao invalida.\n");
             break;
         }
 
     } while(opcao != 0);
 
+    if(alterou){
+        printf("Cliente alterado com sucesso!\n");
+    }
+    else{
+        printf("Nenhuma alteracao feita.\n");
+    }
     return 1;
 }
 
@@ -353,7 +385,7 @@ int excluirCliente(TClientes *clientes, const char *cpf){
     }
 
     if(indice == -1){
-        printf("Cliente não encontrado.\n");
+        printf("Cliente nao encontrado.\n");
         return 0;
     }
 
@@ -374,13 +406,12 @@ int excluirCliente(TClientes *clientes, const char *cpf){
 
         TCliente *temp = realloc(clientes->itens, clientes->quantidade *sizeof(TCliente)); //realoca a memória para o tamanho correto
 
-        if(temp == NULL){
-            printf("Erro ao realocar memória para os clientes.\n");
-            return 0;
+        if(temp != NULL){
+            clientes->itens = temp;
         }
-
-        clientes->itens = temp; //atualiza para o novo endereço de memória
     }
+
+    printf("Cliente excluido com sucesso!\n");
     return 1;
 }
 
@@ -389,7 +420,7 @@ void atualizarCompraCliente(TClientes *clientes, const char * cpf, TData data){
     TCliente *cliente = buscarClienteCPF(clientes, cpf);
 
     if(cliente == NULL){
-        printf("Cliente não encontrado.\n");
+        printf("Cliente nao encontrado.\n");
         return;
     }
     if(cliente->possuiCompra == 0){
