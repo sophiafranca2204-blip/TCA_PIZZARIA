@@ -34,5 +34,9 @@ int excluirCliente(TClientes *clientes, const char *cpf);
 void atualizarCompraCliente(TClientes *clientes, const char * cpf, TData data);
 void liberarClientes(TClientes *clientes);
 
+//arq
+int salvarClientes(const TClientes *clientes, const char *arquivo);
+int carregarClientes(TClientes *clientes, const char *arquivo);
+
 
 #endif

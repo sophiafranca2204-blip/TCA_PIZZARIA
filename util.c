@@ -133,3 +133,67 @@ int lerDecimal(float *valor){
 
     return 1; // Entrada válida
 }
+
+char *lerLinhaArquivo(FILE *arq){
+
+    char *texto = NULL;
+    int caracteres;
+    int tamanho = 0;
+
+    while((caracteres = fgetc(arq)) != '\n' && caracteres != EOF){
+        char *temp = realloc(texto, (tamanho + 1) * sizeof(char));
+
+        if(temp == NULL){
+            free(texto);
+            return NULL;
+        }
+
+        texto = temp;
+        texto[tamanho] = caracteres;
+        tamanho++;
+    }
+
+    if(caracteres == EOF && tamanho == 0){
+        return NULL;
+    }
+
+    char *final = realloc(texto, (tamanho + 1) * sizeof(char));
+
+    if(final == NULL){
+        free(texto);
+        return NULL;
+    }
+
+    texto = final;
+    texto[tamanho] = '\0';
+
+    return texto;
+}
+
+int lerInteiroArquivo(FILE *arq, int *valor){
+
+    char *linha = lerLinhaArquivo(arq);
+
+    if(linha == NULL){
+        return 0;
+    }
+
+    int lidos = sscanf(linha, "%d", valor);
+    free(linha);
+
+    return lidos == 1;
+}
+
+int lerDecimalArquivo(FILE *arq, float *valor){
+
+    char *linha = lerLinhaArquivo(arq);
+
+    if(linha == NULL){
+        return 0;
+    }
+
+    int lidos = sscanf(linha, "%f", valor);
+    free(linha);
+
+    return lidos == 1;
+}

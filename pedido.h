@@ -71,4 +71,9 @@ int excluirPizzaSegura(TListaPizzas *pizzas, const TPedidos *pedidos, int codigo
 int bebidaEmPedido(const TPedidos *pedidos, int codigo);
 int excluirBebidaSegura(TListaBebidas *bebidas, const TPedidos *pedidos, int codigo);
 
+//Arq
+
+int salvarPedidos(const TPedidos *pedidos, const char *arquivo);
+int carregarPedidos(TPedidos *pedidos, const char *arquivo);
+
 #endif

@@ -4,6 +4,10 @@
 #include "util.h"
 #include "bebidas.h"
 
+// So para este arquivo
+
+static int lerBebidaArquivo(FILE *arq, TBebida *b);
+
 void inicializarBebidas(TListaBebidas *bebidas) {
     bebidas->itens = NULL;
     bebidas->quantidade = 0;
@@ -549,4 +553,128 @@ void liberarBebidas(TListaBebidas *bebidas){
 
     bebidas->itens = NULL;
     bebidas->quantidade = 0;
+}
+
+static int lerBebidaArquivo(FILE *arq, TBebida *b){
+
+    b->nome = NULL;
+
+    int ok = 1;
+    int tipo = 0;
+
+    b->nome = lerLinhaArquivo(arq);
+
+    if(b->nome == NULL){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &b->preco)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &tipo)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &b->codigoBebida)){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &b->teorAlcoolico)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &b->volumeMl)){
+        ok = 0;
+    }
+
+    if(ok &&(tipo != NAO_ALCOOLICA && tipo != ALCOOLICA)){
+        ok = 0;
+    }
+
+    if(ok && (b->codigoBebida <= 0 || b->preco <= 0 || b->teorAlcoolico < 0 || b -> teorAlcoolico > 100 || b->volumeMl <= 0)){
+        ok = 0;
+    }
+
+    if(!ok){
+        free(b->nome);
+        b->nome = NULL;
+        return 0;
+    }
+
+    b->tipo = (TTipoBebida)tipo;
+
+    return 1;
+}
+
+int salvarBebidas(const TListaBebidas *bebidas, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "w");
+
+    if(arq == NULL){
+        printf("Erro ao abrir o arquivo %s para escrita.\n", arquivo);
+        return 0;
+    }
+
+    fprintf(arq, "%d\n", bebidas->quantidade);
+
+    for(int i = 0; i < bebidas->quantidade; i++){
+
+        const TBebida *b = &bebidas->itens[i];
+
+        fprintf(arq, "%s\n", b->nome);
+        fprintf(arq, "%.2f\n", b->preco);
+        fprintf(arq, "%d\n", b->tipo);
+        fprintf(arq, "%d\n", b->codigoBebida);
+        fprintf(arq, "%.2f\n", b->teorAlcoolico);
+        fprintf(arq, "%d\n", b->volumeMl);
+    }
+    fclose(arq);
+    return 1;
+}
+
+int carregarBebidas(TListaBebidas *bebidas, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "r");
+
+    if(arq == NULL){
+        return 1;
+    }
+
+    int total = 0;
+
+    if(!lerInteiroArquivo(arq, &total) || total < 0){
+        printf("Arquivo %s com formato invalido.\n", arquivo);
+        fclose(arq);
+        return 0;
+    }
+
+    for(int i = 0; i < total; i++){
+
+        TBebida b;
+
+        if(!lerBebidaArquivo(arq, &b)){
+            printf("Erro ao ler bebida %d do arquivo %s.\n", i + 1, arquivo);
+            liberarBebidas(bebidas);
+            fclose(arq);
+            return 0;
+        }
+
+        TBebida *temp = realloc(bebidas->itens, (bebidas->quantidade + 1) *sizeof(TBebida));
+
+        if(temp == NULL){
+            printf("Erro ao alocar memoria para a bebida.\n");
+            free(b.nome);
+            liberarBebidas(bebidas);
+            fclose(arq);
+            return 0;
+        }
+
+        bebidas->itens = temp;
+        bebidas->itens[bebidas->quantidade] = b;
+        bebidas->quantidade++;
+    }
+
+    fclose(arq);
+    return 1;
 }

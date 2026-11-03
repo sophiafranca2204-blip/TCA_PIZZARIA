@@ -2,8 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include "pizza.h"
-#include "data.h"
-#include "util.h"
+#include "data.h"   
+#include "util.h"   
+
+static int lerPizzaArquivo(FILE *arq, TPizza *p);
 
 void inicializarIngredientes(TIngredientes *ingredientes){
 
@@ -47,6 +49,17 @@ void listarIngredientes(const TIngredientes *ingredientes){
         printf("- %s\n", ingredientes->itens[i]);
     }
 }
+
+int ingredienteExiste(const TIngredientes *lista, const char *nome){
+
+    for(int i = 0; i < lista->quantidade; i++){
+        if(strcmp(lista->itens[i], nome) == 0){
+            return 1;
+        }
+    }
+
+    return 0;
+}
 void liberarIngredientes(TIngredientes *ingredientes){
     for(int i = 0; i < ingredientes->quantidade; i++){
         free(ingredientes->itens[i]);
@@ -64,6 +77,7 @@ void inicializarPizzas(TListaPizzas *pizzas){
     pizzas->itens = NULL;
     pizzas->quantidade = 0 ;
 }
+
 int cadastrarPizza(TListaPizzas *pizzas){
     
     TPizza pizza;
@@ -192,11 +206,17 @@ int cadastrarPizza(TListaPizzas *pizzas){
         tam = strlen(ingrediente);
 
         if(tam != 0){
-            if(adicionarIngrediente(&pizza.ingredientes, ingrediente) == 0){
-                free(ingrediente);
-                liberarIngredientes(&pizza.ingredientes);
-                free(pizza.nome);
-                return 0;
+
+            if(ingredienteExiste(&pizza.ingredientes, ingrediente)){
+                printf("Ingrediente ja existe nessa pizza!\n");
+            }
+            else{
+                if(adicionarIngrediente(&pizza.ingredientes, ingrediente) == 0){
+                    free(ingrediente);
+                    liberarIngredientes(&pizza.ingredientes);
+                    free(pizza.nome);
+                    return 0;
+                }
             }
         }
         else if(pizza.ingredientes.quantidade == 0){
@@ -532,10 +552,16 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                     tam = strlen(ingrediente);
 
                     if(tam != 0){
-                        if(adicionarIngrediente(&novos, ingrediente) == 0){
-                            free(ingrediente);
-                            liberarIngredientes(&novos);
-                            return 0;
+
+                        if(ingredienteExiste(&novos, ingrediente)){
+                            printf("Ingrediente ja existe nessa pizza!\n");
+                        }
+                        else{
+                            if(adicionarIngrediente(&novos, ingrediente) == 0){
+                                free(ingrediente);
+                                liberarIngredientes(&novos);
+                                return 0;
+                            }
                         }
                     }
                     else if(novos.quantidade == 0){
@@ -653,4 +679,155 @@ void liberarPizzas(TListaPizzas *pizzas){
 
     pizzas->itens = NULL;
     pizzas->quantidade = 0;
+}
+
+static int lerPizzaArquivo(FILE *arq, TPizza *p){
+
+    p->nome = NULL;
+    inicializarIngredientes(&p->ingredientes);
+
+    int ok = 1;
+    int tam, cat;
+    int qtdIng = 0;
+
+    if(!lerInteiroArquivo(arq, &p->codigo)){
+        ok = 0;
+    }
+
+    if(ok){
+        p->nome = lerLinhaArquivo(arq);
+        if(p->nome == NULL){
+            ok = 0;
+        }
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &tam)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &cat)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &qtdIng)){
+        ok = 0;
+    }
+
+    if(ok && (p->codigo <= 0 || tam < PEQUENA || tam > GRANDE || cat < TRADICIONAL || cat > NOBRE || qtdIng < 1)){
+        ok = 0;
+    }
+
+    for(int i = 0; ok && i < qtdIng; i++){
+
+        char *ing = lerLinhaArquivo(arq);
+
+        if(ing == NULL){
+            ok = 0;
+        }
+        else{
+            if(adicionarIngrediente(&p->ingredientes, ing) == 0){
+                ok = 0;
+            }
+            free(ing);
+        }
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &p->preco)){
+        ok = 0;
+    }
+
+    if(ok && p->preco <= 0){
+        ok = 0;
+    }
+
+    if(!ok){
+        liberarIngredientes(&p->ingredientes);
+        free(p->nome);
+        p->nome = NULL;
+        return 0;
+    }
+
+    p->tamanho = (TTamanhoPizza)tam;
+    p->categoria = (TCategoriaPizza)cat;
+
+    return 1;
+}
+
+int salvarPizzas(const TListaPizzas *pizzas, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "w");
+
+    if(arq == NULL){
+        printf("Erro ao abrir o arquivo %s para escrita.\n", arquivo);
+        return 0;
+    }
+
+    fprintf(arq, "%d\n", pizzas->quantidade);
+
+    for(int i = 0; i < pizzas->quantidade; i++){
+
+        const TPizza *p = &pizzas->itens[i];
+
+        fprintf(arq, "%d\n", p->codigo);
+        fprintf(arq, "%s\n", p->nome);
+        fprintf(arq, "%d\n", p->tamanho);
+        fprintf(arq, "%d\n", p->categoria);
+        fprintf(arq, "%d\n", p->ingredientes.quantidade);
+
+        for(int j = 0; j < p -> ingredientes.quantidade; j++){
+            fprintf(arq, "%s\n", p->ingredientes.itens[j]);
+        }
+
+        fprintf(arq, "%.2f\n", p->preco);
+    }
+
+    fclose(arq);
+    return 1;
+}
+
+int carregarPizzas(TListaPizzas *pizzas, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "r");
+
+    if(arq == NULL){
+        return 1;
+    }
+
+    int total = 0;
+
+    if(!lerInteiroArquivo(arq, &total) || total < 0){
+        printf("Arquivo %s com formato invalido.\n", arquivo);
+        fclose(arq);
+        return 0;
+    }
+
+    for(int i = 0; i < total; i++){
+
+        TPizza pizza;
+
+        if(!lerPizzaArquivo(arq, &pizza)){
+            printf("Erro ao ler pizza %d do arquivo %s.\n", i + 1, arquivo);
+            liberarPizzas(pizzas);
+            fclose(arq);
+            return 0;
+        }
+
+        TPizza *temp = realloc(pizzas->itens, (pizzas->quantidade + 1) *sizeof(TPizza));
+
+        if(temp == NULL){
+            printf("Erro ao alocar memoria para a pizza.\n");
+            liberarIngredientes(&pizza.ingredientes);
+            free(pizza.nome);
+            liberarPizzas(pizzas);
+            fclose(arq);
+            return 0;
+        }
+
+        pizzas->itens = temp;
+        pizzas->itens[pizzas->quantidade] = pizza;
+        pizzas->quantidade++;
+    }
+
+    fclose(arq);
+    return 1;
 }

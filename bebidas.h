@@ -37,4 +37,8 @@ void liberarBebidas(TListaBebidas *bebidas);
 const char *nomeTipo(TTipoBebida tipo);
 void exibirBebida(const TBebida *bebida);
 
+//arq
+int salvarBebidas(const TListaBebidas *bebidas, const char *arquivo);
+int carregarBebidas(TListaBebidas *bebidas, const char *arquivo);
+
 #endif // BEBIDAS_H

@@ -9,6 +9,7 @@
 // Protótipos das funções auxiliares
 int validarCPF(const char *cpf);
 int cpfjaExiste(TClientes *clientes, const char *cpf);
+static int lerClienteArquivo(FILE *arq, TCliente *c);
 
 void inicializarClientes(TClientes *clientes) {
     clientes-> itens = NULL;
@@ -181,6 +182,14 @@ int cadastrarCliente(TClientes *clientes){
     }
 
     novoCliente->possuiCompra = 0;
+
+    novoCliente->PrimeiraCompra.dia = 0;
+    novoCliente->PrimeiraCompra.mes = 0;
+    novoCliente->PrimeiraCompra.ano = 0;
+
+    novoCliente->UltimaCompra.dia = 0;
+    novoCliente->UltimaCompra.mes = 0;
+    novoCliente->UltimaCompra.ano = 0;
 
     printf("Digite a data de nascimento do cliente:\n");
 
@@ -435,6 +444,10 @@ void atualizarCompraCliente(TClientes *clientes, const char * cpf, TData data){
             cliente->UltimaCompra = data;
         }
     }
+
+    if(cliente->possuiCompra && compararDatas(data, cliente->PrimeiraCompra) < 0){
+        cliente->PrimeiraCompra = data;
+    }
 }
 void liberarClientes(TClientes *clientes){
 
@@ -448,4 +461,167 @@ void liberarClientes(TClientes *clientes){
 
     clientes->itens = NULL;
     clientes->quantidade = 0;
+}
+
+static int lerClienteArquivo(FILE *arq, TCliente *c){
+
+    c->nome = NULL;
+    c->endereco.logradouro = NULL;
+    c->endereco.numero = NULL;
+    c->endereco.complemento = NULL;
+    c->endereco.bairro = NULL;
+    c->endereco.cidade = NULL;
+    c->endereco.estado = NULL;
+    c->endereco.cep = NULL;
+
+    int ok = 1; // serve para verificar se a leitura foi bem sucedida
+
+    char *cpf = lerLinhaArquivo(arq);
+
+    if(cpf == NULL || strlen(cpf) != 11){
+        ok = 0;
+    }
+    else{
+        strcpy(c->cpf, cpf);
+    }
+
+    free(cpf);
+
+    c->nome = lerLinhaArquivo(arq);
+    if(c->nome == NULL){
+        ok = 0;
+    }
+
+    if(ok && !lerDataArquivo(arq, &c->dataNascimento)){ 
+        ok = 0;
+    }
+
+    if(ok){
+        c->endereco.logradouro = lerLinhaArquivo(arq);
+        c->endereco.numero = lerLinhaArquivo(arq);
+        c->endereco.complemento = lerLinhaArquivo(arq);
+        c->endereco.bairro = lerLinhaArquivo(arq);
+        c->endereco.cidade = lerLinhaArquivo(arq);
+        c->endereco.estado = lerLinhaArquivo(arq);
+        c->endereco.cep = lerLinhaArquivo(arq);
+
+        if(c->endereco.logradouro == NULL || c->endereco.numero == NULL || c->endereco.complemento == NULL || c->endereco.bairro == NULL || c->endereco.cidade == NULL || c->endereco.estado == NULL || c->endereco.cep == NULL){
+            ok = 0;
+        }
+
+    }
+
+    if(ok && !lerDataArquivo(arq, &c->dtCadastro)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &c->possuiCompra)){
+        ok = 0;
+    }
+
+    if(ok && !lerDataArquivo(arq, &c->PrimeiraCompra)){
+        ok = 0;
+    }
+
+    if(ok && !lerDataArquivo(arq, &c->UltimaCompra)){
+        ok = 0;
+    }
+
+    if(!ok){
+        free(c->nome);
+        liberarEndereco(&c->endereco);
+        return 0;
+    }
+
+    return 1;
+
+}
+
+int salvarClientes(const TClientes *clientes, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "w");
+
+    if(arq == NULL){
+        printf("Erro ao abrir %s para escrita.\n", arquivo);
+        return 0;
+    }
+
+    fprintf(arq, "%d\n", clientes->quantidade);
+
+    for(int i = 0; i < clientes->quantidade; i++){
+        const TCliente *c = &clientes->itens[i];
+
+        fprintf(arq, "%s\n", c->cpf);
+        fprintf(arq, "%s\n", c->nome);
+
+        fprintf(arq, "%d %d %d\n", c->dataNascimento.dia, c->dataNascimento.mes, c->dataNascimento.ano);
+
+        //endereço
+
+        fprintf(arq, "%s\n", c->endereco.logradouro);
+        fprintf(arq, "%s\n", c->endereco.numero);
+        fprintf(arq, "%s\n", c->endereco.complemento);
+        fprintf(arq, "%s\n", c->endereco.bairro);
+        fprintf(arq, "%s\n", c->endereco.cidade);
+        fprintf(arq, "%s\n", c->endereco.estado);
+        fprintf(arq, "%s\n", c->endereco.cep);
+
+        //dt cadastro
+        fprintf(arq, "%d %d %d\n", c->dtCadastro.dia, c->dtCadastro.mes, c->dtCadastro.ano);
+        fprintf(arq, "%d\n", c->possuiCompra);
+
+        //primeira e ultima compra
+        fprintf(arq, "%d %d %d\n", c->PrimeiraCompra.dia, c->PrimeiraCompra.mes, c->PrimeiraCompra.ano);
+        fprintf(arq, "%d %d %d\n", c->UltimaCompra.dia, c->UltimaCompra.mes, c->UltimaCompra.ano);
+    }
+
+    fclose(arq);
+    return 1;
+}
+
+int carregarClientes(TClientes *clientes, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "r");
+
+    if(arq == NULL){
+        return 1;
+    }
+
+    int total;
+
+    if(!lerInteiroArquivo(arq, &total) || total < 0){
+        printf("Arquivo %s com formato invalido.\n", arquivo);
+        fclose(arq);
+        return 0;
+    }
+
+    for(int i = 0; i < total; i++){
+
+        TCliente c;
+
+        if(!lerClienteArquivo(arq, &c)){
+            printf("Erro ao ler o cliente %d de %s.\n", i + 1, arquivo);
+            liberarClientes(clientes);
+            fclose(arq);
+            return 0;
+        }
+
+        TCliente *temp = realloc(clientes->itens, (clientes->quantidade + 1) * sizeof(TCliente));
+
+        if(temp == NULL){
+            printf("Erro ao alocar memoria para o cliente.\n");
+            free(c.nome);
+            liberarEndereco(&c.endereco);
+            liberarClientes(clientes);
+            fclose(arq);
+            return 0;
+        }
+
+        clientes->itens = temp;
+        clientes->itens[clientes->quantidade] = c;
+        clientes->quantidade++;
+    }
+
+    fclose(arq);
+    return 1;
 }

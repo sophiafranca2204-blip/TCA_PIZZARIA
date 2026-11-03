@@ -56,5 +56,10 @@ void liberarPizzas(TListaPizzas *pizzas);
 const char *nomeTamanho(TTamanhoPizza tamanho);
 const char *nomeCategoria(TCategoriaPizza categoria);
 void exibirPizza(const TPizza *pizza);
+int ingredienteExiste(const TIngredientes *lista, const char *nome);
+
+//arq
+int salvarPizzas(const TListaPizzas *pizzas, const char *arquivo);
+int carregarPizzas(TListaPizzas *pizzas, const char *arquivo);
 
 #endif

@@ -6,11 +6,15 @@
 #include "bebidas.h"
 #include "pedido.h"
 #include "util.h"
+#include "pizza.h"
 
 //funções apenas para este arquivo
 
 static int lerItensPizza(TPedido *pedido, TListaPizzas *pizzas);
 static int lerItensBebida(TPedido *pedido, TListaBebidas *bebidas);
+static  int lerItemPizzaArquivo(FILE *arq, TItemPizza *it);
+static int lerItemBebidaArquivo(FILE *arq, TItemBebida *it);
+static int lerPedidoArquivo(FILE *arq, TPedido *p);
 
 void inicializarPedidos(TPedidos *pedidos){
     pedidos->itens = NULL;
@@ -57,13 +61,13 @@ void exibirPedido(const TPedido *pedido){
     for(int i = 0; i < pedido->pizzas.quantidade; i++){
         TItemPizza *item = &pedido->pizzas.itens[i];
 
-        printf(" %dx %s (%s)/(%s) - R$ %.2f cada - subtotal R$ %.2f\n", item->quantidade, item->nome, nomeTamanho(item->tamanho), nomeCategoria(item->categoria), item->precoUnitario, item->subtotal);
+        printf("  %dx %s (%s)/(%s) - R$ %.2f cada - subtotal R$ %.2f\n", item->quantidade, item->nome, nomeTamanho(item->tamanho), nomeCategoria(item->categoria), item->precoUnitario, item->subtotal);
     }
 
     printf("Bebidas:\n");
 
     if(pedido->bebidas.quantidade == 0){
-        printf(" (nenhuma)\n");
+        printf("  (nenhuma)\n");
     }
 
     for(int i = 0; i < pedido->bebidas.quantidade; i++){
@@ -316,7 +320,9 @@ int realizarPedido(TPedidos *pedidos, TClientes *clientes, TListaPizzas *pizzas,
         return 0;
     }
 
-    if(buscarClienteCPF(clientes, cpf) == NULL){
+    TCliente *cliente = buscarClienteCPF(clientes, cpf);
+
+    if(cliente == NULL){
         printf("Cliente nao encontrado.\n");
         free(cpf);
         return 0;
@@ -342,10 +348,24 @@ int realizarPedido(TPedidos *pedidos, TClientes *clientes, TListaPizzas *pizzas,
 
     printf("Data do pedido:\n");
 
-    if(lerData(&pedido.data) != 1){
-        liberarPedido(&pedido);
-        return 0;
-    }
+    int dataOk = 0;
+
+    do{
+
+        if(lerData(&pedido.data) != 1){
+            liberarPedido(&pedido);
+            return 0;
+        }
+
+        if(compararDatas(pedido.data, cliente->dtCadastro) < 0){
+            printf("A data do pedido nao pode ser anterior ao cadastro do cliente.\n");
+            printf("Digite novamente.\n");
+        }
+        else{
+            dataOk = 1;
+        }
+
+    } while(!dataOk);
 
     if(lerItensPizza(&pedido, pizzas) == 0){
         liberarPedido(&pedido);
@@ -507,4 +527,319 @@ int excluirBebidaSegura(TListaBebidas *bebidas, const TPedidos *pedidos, int cod
 
     return excluirBebida(bebidas, codigo);
     
+}
+
+static  int lerItemPizzaArquivo(FILE *arq, TItemPizza *it){
+
+    it->nome = NULL;
+    
+    int ok = 1;
+    int tam, cat;
+
+    it->nome = lerLinhaArquivo(arq);
+    if(it->nome == NULL){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &tam)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &cat)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &it->codigoPizza)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &it->quantidade)){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &it->precoUnitario)){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &it->subtotal)){
+        ok = 0;
+    }
+
+    if(ok &&(tam < PEQUENA || tam > GRANDE || cat < TRADICIONAL || cat > NOBRE)){
+        ok = 0;
+    }
+
+    if(!ok){
+        free(it->nome);
+        it->nome = NULL;
+        return 0;
+    }
+
+    it->tamanho = (TTamanhoPizza)tam;
+    it->categoria = (TCategoriaPizza)cat;
+
+    return 1;
+}
+
+static int lerItemBebidaArquivo(FILE *arq, TItemBebida *it){
+
+    it->nome = NULL;
+
+    int ok = 1;
+    int tipo;
+
+    it->nome = lerLinhaArquivo(arq);
+    if(it->nome == NULL){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &it->volumeMl)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &tipo)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &it->codigoBebida)){
+        ok = 0;
+    }
+
+    if(ok && !lerInteiroArquivo(arq, &it->quantidade)){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &it->precoUnitario)){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &it->subtotal)){ // 
+        ok = 0;
+    }
+    
+    if(ok && (it->volumeMl <= 0 || it->quantidade <= 0 || it->precoUnitario < 0 || it->subtotal < 0 || (tipo != NAO_ALCOOLICA && tipo != ALCOOLICA))){
+        ok = 0;
+    }
+
+    if(!ok){
+        free(it->nome);
+        it->nome = NULL;
+        return 0;
+    }
+
+    it->tipo = (TTipoBebida)tipo;
+    return 1;
+}
+
+static int lerPedidoArquivo(FILE *arq, TPedido *p){
+
+    p->cpfCliente = NULL;
+    p->pizzas.itens = NULL;
+    p->pizzas.quantidade = 0;
+    p->bebidas.itens = NULL;
+    p->bebidas.quantidade = 0;
+
+    int ok = 1;
+
+    if(!lerInteiroArquivo(arq, &p->numero)){
+        ok = 0;
+    }
+
+    if(ok){
+        p->cpfCliente = lerLinhaArquivo(arq);
+        if(p->cpfCliente == NULL){
+            ok = 0;
+        }
+    }
+
+    if(ok && !lerDataArquivo(arq, &p->data)){
+        ok = 0;
+    }
+
+    if(ok && !lerDecimalArquivo(arq, &p->valorTotal)){
+        ok = 0;
+    }
+
+    //pizzas
+
+    int qtd = 0;
+    
+    if(ok && !lerInteiroArquivo(arq, &qtd)){
+        ok = 0;
+    }
+    if(ok && qtd < 0){
+        ok = 0;
+    }
+
+    for(int i = 0; ok && i < qtd; i++){
+
+        TItemPizza item;
+
+        if(!lerItemPizzaArquivo(arq, &item)){
+            ok = 0;
+        }
+        else{
+
+            TItemPizza *temp = realloc(p->pizzas.itens, (p->pizzas.quantidade + 1) *sizeof(TItemPizza));
+
+            if(temp == NULL){
+                printf("Errou ao alocar memoria para o item de pizza.\n");
+                free(item.nome);
+                ok = 0;
+            }
+
+            if(ok){
+                p->pizzas.itens = temp;
+                p->pizzas.itens[p->pizzas.quantidade] = item;
+                p->pizzas.quantidade++;
+            }
+        }
+    }
+
+    //bebidas
+    
+    int qtdBebidas = 0;
+
+    if(ok && !lerInteiroArquivo(arq, &qtdBebidas)){
+        ok = 0;
+    }
+
+    if(ok && qtdBebidas < 0){
+        ok = 0;
+    }
+
+    for(int i = 0; ok && i < qtdBebidas; i++){
+
+        TItemBebida item;
+
+        if(!lerItemBebidaArquivo(arq, &item)){
+            ok = 0;
+        }
+        else{
+
+            TItemBebida *temp = realloc(p->bebidas.itens, (p->bebidas.quantidade + 1) *sizeof(TItemBebida));
+
+            if(temp == NULL){
+                printf("Erro ao alocar memoria para o item de bebida.\n");
+                free(item.nome);
+                ok = 0;
+            }
+
+            if(ok){
+                p->bebidas.itens = temp;
+                p->bebidas.itens[p->bebidas.quantidade] = item;
+                p->bebidas.quantidade++;
+            }
+        }
+    }
+
+    if(!ok){
+        liberarPedido(p);
+        return 0;
+    }
+
+    return 1;
+}
+
+int salvarPedidos(const TPedidos *pedidos, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "w");
+
+    if(arq == NULL){
+        printf("Erro ao abrir %s para escrita.\n", arquivo);
+        return 0;
+    }
+
+    fprintf(arq, "%d\n", pedidos->quantidade);
+
+    for(int i = 0; i < pedidos->quantidade; i++){
+
+        const TPedido *p = &pedidos->itens[i];
+
+        fprintf(arq, "%d\n", p->numero);
+        fprintf(arq, "%s\n", p->cpfCliente);
+        fprintf(arq, "%d %d %d\n", p->data.dia, p->data.mes, p->data.ano);
+        fprintf(arq, "%.2f\n", p->valorTotal);
+
+        //itens de pizza
+
+        fprintf(arq, "%d\n", p->pizzas.quantidade);
+
+        for(int j = 0; j < p->pizzas.quantidade; j++){
+            const TItemPizza *it = &p->pizzas.itens[j];
+
+            fprintf(arq, "%s\n", it->nome);
+            fprintf(arq, "%d\n", it->tamanho);
+            fprintf(arq, "%d\n", it->categoria);
+            fprintf(arq, "%d\n", it->codigoPizza);
+            fprintf(arq, "%d\n", it->quantidade);
+            fprintf(arq, "%.2f\n", it->precoUnitario);
+            fprintf(arq, "%.2f\n", it->subtotal);
+        }
+
+        //itens de Bebida
+
+        fprintf(arq, "%d\n", p->bebidas.quantidade);
+
+        for(int j = 0; j < p->bebidas.quantidade; j++){
+            const TItemBebida *it = &p->bebidas.itens[j];
+
+            fprintf(arq, "%s\n", it->nome);
+            fprintf(arq, "%d\n", it->volumeMl);
+            fprintf(arq, "%d\n", it->tipo);
+            fprintf(arq, "%d\n", it->codigoBebida);
+            fprintf(arq, "%d\n", it->quantidade);
+            fprintf(arq, "%.2f\n", it->precoUnitario);
+            fprintf(arq, "%.2f\n", it->subtotal);
+
+        }
+    }
+
+    fclose(arq);
+    return 1;
+}
+
+int carregarPedidos(TPedidos *pedidos, const char *arquivo){
+
+    FILE *arq = fopen(arquivo, "r");
+
+    if(arq == NULL){
+        return 1;
+    }
+
+    int total = 0;
+
+    if(!lerInteiroArquivo(arq, & total) || total < 0){
+        printf("Arquivo %s com formato invalido.\n", arquivo);
+        fclose(arq);
+        return 0;
+    }
+
+    for(int i = 0; i < total; i++){
+
+        TPedido p;
+
+        if(!lerPedidoArquivo(arq, &p)){
+            printf("Erro ao ler pedido %d do arquivo %s.\n", i + 1, arquivo);
+            liberarPedidos(pedidos);
+            fclose(arq);
+            return 0;
+        }
+
+        TPedido *temp = realloc(pedidos->itens, (pedidos->quantidade + 1) *sizeof(TPedido));
+
+        if(temp == NULL){
+            printf("Erro ao alocar memoria.\n");
+            liberarPedido(&p);
+            liberarPedidos(pedidos);
+            fclose(arq);
+            return 0;
+        }
+        pedidos->itens = temp;
+        pedidos->itens[pedidos->quantidade] = p;
+        pedidos->quantidade++;
+    }
+    
+    fclose(arq);
+    return 1;
 }

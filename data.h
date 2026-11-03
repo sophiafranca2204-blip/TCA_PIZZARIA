@@ -13,4 +13,5 @@ int lerData(TData *data);
 int validarData(TData data);
 int compararDatas(TData data1, TData data2);
 void exibirData(TData data);
+int lerDataArquivo(FILE *arq, TData *data);
 #endif

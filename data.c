@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "data.h"
 #include "util.h"
 
@@ -135,4 +136,18 @@ int compararDatas(TData data1, TData data2){
 
 void exibirData(TData data){
     printf("%02d/%02d/%04d\n", data.dia, data.mes, data.ano);
+}
+
+int lerDataArquivo(FILE *arq, TData *data){
+
+    char *linha = lerLinhaArquivo(arq);
+
+    if(linha == NULL){
+        return 0;
+    }
+
+    int lidos = sscanf(linha, "%d %d %d", &data->dia, &data->mes, &data->ano);
+    free(linha);
+
+    return lidos == 3;
 }
