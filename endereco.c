@@ -1,8 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "endereco.h"
 #include "util.h"
 
+
+//aux
+static char *lerCampoObrigatorio(const char *mensagem){
+
+    while(1){
+
+        printf("%s", mensagem);
+
+        char *texto = lerTexto();
+
+        if(texto == NULL){
+            return NULL; // Erro ao ler o texto
+        }
+
+        if(strlen(texto) > 0){
+            return texto; // Retorna o texto lido se não estiver vazio
+        }
+
+        printf("Campo obrigatorio! Digite novamente.\n");
+        free(texto); // Libera a memória alocada para o texto vazio
+    }
+}
 
 int lerEndereco(TEndereco *endereco) {
 
@@ -14,25 +37,21 @@ int lerEndereco(TEndereco *endereco) {
     endereco->estado = NULL;
     endereco->cep = NULL;
     
-    printf("Digite o logradouro: ");
-    endereco->logradouro = lerTexto();
-
-    if(endereco->logradouro == NULL){
+    endereco->logradouro = lerCampoObrigatorio("Digite o logradouro: ");
+    if(endereco->logradouro == NULL) {
         printf("Erro ao alocar memoria para o logradouro.\n");
         liberarEndereco(endereco);
         return 0;
     }
 
-    printf("Digite o numero: ");
-    endereco->numero = lerTexto();
-
-    if(endereco->numero == NULL){
+    endereco->numero = lerCampoObrigatorio("Digite o numero: ");
+    if(endereco->numero == NULL) {
         printf("Erro ao alocar memoria para o numero.\n");
         liberarEndereco(endereco);
         return 0;
     }
 
-    printf("Digite o complemento: ");
+    printf("Digite o complemento(opcional): ");
     endereco->complemento = lerTexto();
 
     if(endereco->complemento == NULL){
@@ -41,28 +60,22 @@ int lerEndereco(TEndereco *endereco) {
         return 0;
     }
 
-    printf("Digite o bairro: ");
-    endereco->bairro = lerTexto();
-
-    if(endereco->bairro == NULL){
+    endereco->bairro = lerCampoObrigatorio("Digite o bairro: ");
+    if(endereco->bairro == NULL) {
         printf("Erro ao alocar memoria para o bairro.\n");
         liberarEndereco(endereco);
         return 0;
     }
 
-    printf("Digite a cidade: ");
-    endereco->cidade = lerTexto();
-
-    if(endereco->cidade == NULL){
+    endereco->cidade = lerCampoObrigatorio("Digite a cidade: ");
+    if(endereco->cidade == NULL) { 
         printf("Erro ao alocar memoria para a cidade.\n");
         liberarEndereco(endereco);
         return 0;
     }
 
-    printf("Digite o estado: ");
-    endereco->estado = lerTexto();
-
-    if(endereco->estado == NULL){
+    endereco->estado = lerCampoObrigatorio("Digite o estado: ");
+    if(endereco->estado == NULL) {
         printf("Erro ao alocar memoria para o estado.\n");
         liberarEndereco(endereco);
         return 0;
@@ -72,7 +85,7 @@ int lerEndereco(TEndereco *endereco) {
 
     do {
         printf("Digite o CEP (apenas numeros): ");
-        char *cep = lerTexto();
+        char *cep = lerTexto(); 
 
         if(cep == NULL){
             printf("Erro ao alocar memoria para o CEP.\n");
