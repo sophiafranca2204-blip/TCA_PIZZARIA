@@ -3,34 +3,34 @@
 #include <stdlib.h>
 #include "util.h"
 
-char *lerTexto(void){
+char *lerTexto(void){ // Função para ler uma linha de texto do usuário, alocando dinamicamente a memória necessária
 
-    char *texto = NULL;
-    int caracteres;
+    char *texto = NULL; // Ponteiro para armazenar o texto lido, NULL pois ainda não foi alocado
+    int caracteres; 
     int tamanho = 0;
 
-    while((caracteres = getchar()) != '\n' && caracteres != EOF){
-        char *temp = realloc(texto, (tamanho + 1) *sizeof(char));
+    while((caracteres = getchar()) != '\n' && caracteres != EOF){ // Lê caractere por caractere até encontrar uma nova linha ou EOF
+        char *temp = realloc(texto, (tamanho + 1) *sizeof(char)); // Realoca a memória para armazenar o novo caractere
 
-        if(temp == NULL){
+        if(temp == NULL){ // Se a realocação falhar, libera a memória alocada e retorna NULL
             free(texto);
             return NULL;
         }
 
         texto = temp;
-        texto[tamanho] = caracteres;
-        tamanho ++;
+        texto[tamanho] = caracteres; // Armazena o caractere lido na posição correta do vetor
+        tamanho ++; // Incrementa o tamanho do texto lido
     }
 
-    if(caracteres == EOF && tamanho == 0){
+    if(caracteres == EOF && tamanho == 0){ // Se EOF for encontrado antes de ler qualquer caractere, retorna NULL
         return NULL;   // a entrada acabou e nada foi lido
     }
 
-    while(tamanho > 0 && (texto[tamanho - 1] == ' ' || texto[tamanho - 1] == '\t')){
-        tamanho--;
+    while(tamanho > 0 && (texto[tamanho - 1] == ' ' || texto[tamanho - 1] == '\t')){ // Remove espaços em branco e tabulações do final do texto'
+        tamanho--; // Decrementa o tamanho do texto
     }
-
-    char *final = realloc(texto, (tamanho + 1) *sizeof(char));
+ 
+    char *final = realloc(texto, (tamanho + 1) *sizeof(char)); // Realoca a memória para o tamanho final do texto, incluindo o caractere nulo '\0'
 
     if(final == NULL){
         free(texto);
@@ -42,15 +42,16 @@ char *lerTexto(void){
 
     return texto;
 }
-void limparBuffer(void) {
+
+void limparBuffer(void) { // Função para limpar o buffer de entrada
     
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    while ((c = getchar()) != '\n' && c != EOF); // Lê e descarta todos os caracteres restantes no buffer até encontrar uma nova linha ou EOF
 }
 
 int lerInteiro(int *valor){
 
-    int resultado = scanf("%d", valor);
+    int resultado = scanf("%d", valor); // Lê um inteiro do usuário e armazena no ponteiro fornecido
 
     if(resultado == EOF){
         return -1;
@@ -196,4 +197,40 @@ int lerDecimalArquivo(FILE *arq, float *valor){
     free(linha);
 
     return lidos == 1;
+}
+
+void limparTela(void) {
+
+    #ifdef _WIN32
+        system("cls"); // Comando para limpar a tela no Windows
+    #else
+        system("clear"); // Comando para limpar a tela em sistemas Unix/Linux
+    #endif
+}
+
+void pausar(void) {
+
+    printf("Pressione Enter para continuar...");
+    char *texto = lerTexto(); // Lê uma linha de texto do usuário para pausar a execução
+    free(texto); // Libera a memória alocada para o texto lido
+}
+
+#define SEPARADOR "-----"
+
+void escreverSeparador(FILE *arq){
+    fprintf(arq, "%s\n", SEPARADOR);
+}
+
+int lerSeparadorArquivo(FILE *arq){
+
+    char *linha = lerLinhaArquivo(arq);
+
+    if(linha == NULL){
+        return 0;
+    }
+
+    int ok = (strcmp(linha, SEPARADOR) == 0);
+    free(linha);
+
+    return ok;
 }

@@ -52,6 +52,7 @@ void exibirPedido(const TPedido *pedido){
     exibirCPF(pedido->cpfCliente);
     printf("Data do Pedido: ");
     exibirData(pedido->data);
+    
     printf("Pizzas:\n");
 
     if(pedido->pizzas.quantidade == 0){
@@ -733,6 +734,10 @@ static int lerPedidoArquivo(FILE *arq, TPedido *p){
         }
     }
 
+    if(ok && !lerSeparadorArquivo(arq)){
+        ok = 0;
+    }
+
     if(!ok){
         liberarPedido(p);
         return 0;
@@ -793,6 +798,8 @@ int salvarPedidos(const TPedidos *pedidos, const char *arquivo){
             fprintf(arq, "%.2f\n", it->subtotal);
 
         }
+
+        escreverSeparador(arq);
     }
 
     fclose(arq);

@@ -34,7 +34,7 @@ int validarCPF(const char *cpf) {
     int todosIguais = 1;
 
     for(int i = 1; i < 11; i++){
-        if(cpf[i] != cpf[0]){
+        if(cpf[i] != cpf[0]){ // Se algum dígito for diferente, não são todos iguais
             todosIguais = 0;
             break;
         }
@@ -48,14 +48,14 @@ int validarCPF(const char *cpf) {
     int soma = 0;
 
     for(int i = 0; i < 9; i++){
-        soma += (cpf[i] - '0') * (10 - i);
+        soma += (cpf[i] - '0') * (10 - i); // Converte o caractere para número e multiplica pelo peso
     }
 
     int digito1 = (soma * 10) % 11;
     if (digito1 == 10) digito1 = 0;
 
     int soma2 = 0;
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < 10; i++){ 
         soma2 += (cpf[i] - '0') * (11 - i);
     }
 
@@ -72,7 +72,7 @@ int validarCPF(const char *cpf) {
 int cpfjaExiste(TClientes *clientes, const char *cpf) {
     
     for (int i = 0; i < clientes->quantidade; i++) {
-        if (strcmp(clientes->itens[i].cpf, cpf) == 0) {
+        if (strcmp(clientes->itens[i].cpf, cpf) == 0) { 
             return 1; // CPF já existe
         }
     }
@@ -161,7 +161,7 @@ int cadastrarCliente(TClientes *clientes){
     }
 
     clientes->itens = temp;
-    TCliente *novoCliente = &clientes->itens[clientes->quantidade];
+    TCliente *novoCliente = &clientes->itens[clientes->quantidade]; 
 
     strncpy(novoCliente->cpf, cpfDigitado, 11);
     novoCliente->cpf[11] = '\0';
@@ -409,7 +409,7 @@ int excluirCliente(TClientes *clientes, const char *cpf){
 
     if(clientes->quantidade == 0){
         free(clientes->itens);
-        clientes->itens = NULL;
+        clientes->itens = NULL; //estado de lista vazia
     }
     else{
 
@@ -440,12 +440,12 @@ void atualizarCompraCliente(TClientes *clientes, const char * cpf, TData data){
     }
     else{
 
-        if(compararDatas(data, cliente->UltimaCompra) > 0){
+        if(compararDatas(data, cliente->UltimaCompra) > 0){ // Se a nova data for posterior à última compra, atualiza a última compra
             cliente->UltimaCompra = data;
         }
     }
 
-    if(cliente->possuiCompra && compararDatas(data, cliente->PrimeiraCompra) < 0){
+    if(cliente->possuiCompra && compararDatas(data, cliente->PrimeiraCompra) < 0){ // Se a nova data for anterior à primeira compra, atualiza a primeira compra
         cliente->PrimeiraCompra = data;
     }
 }
@@ -527,6 +527,10 @@ static int lerClienteArquivo(FILE *arq, TCliente *c){
         ok = 0;
     }
 
+    if(ok && !lerSeparadorArquivo(arq)){
+        ok = 0;
+    }
+
     if(!ok){
         free(c->nome);
         liberarEndereco(&c->endereco);
@@ -549,7 +553,7 @@ int salvarClientes(const TClientes *clientes, const char *arquivo){
     fprintf(arq, "%d\n", clientes->quantidade);
 
     for(int i = 0; i < clientes->quantidade; i++){
-        const TCliente *c = &clientes->itens[i];
+        const TCliente *c = &clientes->itens[i]; // Aponta para o cliente atual
 
         fprintf(arq, "%s\n", c->cpf);
         fprintf(arq, "%s\n", c->nome);
@@ -573,6 +577,8 @@ int salvarClientes(const TClientes *clientes, const char *arquivo){
         //primeira e ultima compra
         fprintf(arq, "%d %d %d\n", c->PrimeiraCompra.dia, c->PrimeiraCompra.mes, c->PrimeiraCompra.ano);
         fprintf(arq, "%d %d %d\n", c->UltimaCompra.dia, c->UltimaCompra.mes, c->UltimaCompra.ano);
+
+        escreverSeparador(arq);
     }
 
     fclose(arq);
@@ -584,7 +590,7 @@ int carregarClientes(TClientes *clientes, const char *arquivo){
     FILE *arq = fopen(arquivo, "r");
 
     if(arq == NULL){
-        return 1;
+        return 1; //primeira vez que o programa é executado, arquivo não existe
     }
 
     int total;
@@ -618,7 +624,7 @@ int carregarClientes(TClientes *clientes, const char *arquivo){
         }
 
         clientes->itens = temp;
-        clientes->itens[clientes->quantidade] = c;
+        clientes->itens[clientes->quantidade] = c; // copia o cliente lido para a lista de clientes
         clientes->quantidade++;
     }
 

@@ -3,58 +3,44 @@
 #include "data.h"
 #include "util.h"
 
-int lerData(TData *data) {
+int lerData(TData *data){
 
-    int r;
+    while(1){
 
-    do{
+        printf("Digite a data (dd mm aaaa): ");
 
-        data->dia = 0;
-        data->mes = 0;
-        data->ano = 0;
+        char *texto = lerTexto();
 
-        printf("Digite o dia: ");
-        r = lerInteiro(&data->dia);
-
-        if(r == -1){
-            return -1;
+        if(texto == NULL){
+            return -1; // Erro ao ler o texto
         }
 
-        if(r == 0){
-            printf("Entrada invalida!\n");
-            continue;
+        int dia, mes, ano;
+        int n = 0;
+
+        int lidos = sscanf(texto, "%d %d %d%n", &dia, &mes, &ano, &n);
+
+        if(lidos == 3 && texto[n] == '\0'){
+
+            TData temp;
+            temp.dia = dia;
+            temp.mes = mes;
+            temp.ano = ano;
+
+            if(validarData(temp)){
+                *data = temp;
+                free(texto);
+                return 1; // Data válida
+            }
+
+            printf("Data invalida! Digite novamente.\n");
+        }
+        else{
+            printf("Formato invalido! Digite novamente.\n");
         }
 
-        printf("Digite o mes: ");
-        r = lerInteiro(&data->mes);
-
-        if(r == -1){
-            return -1;
-        }
-
-        if(r == 0){
-            printf("Entrada invalida!\n");
-            continue;
-        }
-
-        printf("Digite o ano: ");
-        r = lerInteiro(&data->ano);
-
-        if(r == -1){
-            return -1;
-        }
-
-        if(r == 0){
-            printf("Entrada invalida!\n");
-            continue;
-        }
-
-        if(!validarData(*data)){
-            printf("Data invalida!\n");
-        }
-    } while(!validarData(*data));
-
-    return 1;
+        free(texto);
+    }
 }
 
 int validarData(TData data){

@@ -44,7 +44,10 @@ int main(){
 
     int opcao = -1;
 
-    while(opcao!=0){
+    while(opcao != 0){
+
+        int pausa = 1;
+        limparTela();
         exibirMenuOpcao();
         
         int r = lerInteiro(&opcao);
@@ -54,6 +57,7 @@ int main(){
         }
         else if(r == 0){
             printf("Entrada invalida!\n");
+            pausar();
             opcao = -1;
             continue;
         }
@@ -62,7 +66,7 @@ int main(){
         {
         case 1:{
             printf("\n=============================\n");
-            printf("             CLIENTE            ");
+            printf("           CLIENTE            ");
             printf("\n=============================\n");
             printf("1. Cadastrar cliente\n");
             printf("2. Listar clientes\n"); 
@@ -71,6 +75,8 @@ int main(){
             printf("5. Excluir cliente\n");
             printf("6. Buscar cliente por nome\n");
             printf("0. Voltar\n");
+            printf("-----------------------------\n");
+            printf("Escolha uma opcao: ");
 
             int opcaoCliente;
 
@@ -160,6 +166,10 @@ int main(){
                 }
                 break;
             }
+
+            case 0:
+                pausa = 0; 
+                break; 
             
             default:
                 printf("Opcao invalida!\n");
@@ -171,7 +181,7 @@ int main(){
             }
             case 2:{
                 printf("\n=============================\n");
-                printf("             BEBIDA            ");
+                printf("           BEBIDA             ");
                 printf("\n=============================\n");
                 printf("1. Cadastrar bebida\n");
                 printf("2. Listar bebidas\n"); 
@@ -180,7 +190,10 @@ int main(){
                 printf("5. Excluir bebida\n");
                 printf("6. Listar bebidas alcoolicas\n");
                 printf("7. Listar bebidas nao alcoolicas\n");
+                printf("8. Buscar bebida por codigo\n");
                 printf("0. Voltar\n");
+                printf("-----------------------------\n");
+                printf("Escolha uma opcao: ");
 
                 int opcaoBebida;
 
@@ -231,6 +244,9 @@ int main(){
                                 salvarTudo(&listaC, &listaP, &listaB, &pedidos);
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
 
                         break;
                     }
@@ -244,6 +260,9 @@ int main(){
                                 salvarTudo(&listaC, &listaP, &listaB, &pedidos);
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
                         break;
                     }
 
@@ -256,6 +275,32 @@ int main(){
                         listarBebidasPorTipo(&listaB, NAO_ALCOOLICA);
                         break;
                     }
+
+                    case 8: {
+
+                        int codigo;
+                        printf("Digite o codigo da bebida: ");
+
+                        if(lerInteiro(&codigo) == 1){
+
+                            TBebida *b = buscarBebidaCodigo(&listaB, codigo);
+
+                            if(b == NULL){
+                                printf("Bebida nao encontrada.\n");
+                            }
+                            else{
+                                exibirBebida(b);
+                            }
+                        }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
+                        break;
+                    }
+
+                    case 0:
+                        pausa = 0; 
+                        break;
                     
                     default:
                         printf("Opcao invalida!\n");
@@ -266,13 +311,15 @@ int main(){
 
              case 3:{
                 printf("\n=============================\n");
-                printf("             PEDIDO            ");
+                printf("           PEDIDO             ");
                 printf("\n=============================\n");
                 printf("1. Cadastrar pedido\n");
                 printf("2. Listar pedidos\n");          
                 printf("3. Buscar pedido por numero\n");
                 printf("4. Pedidos de um cliente\n");
                 printf("0. Voltar\n");
+                printf("-----------------------------\n");
+                printf("Escolha uma opcao: ");
 
                 int opcaoPedido;
 
@@ -318,6 +365,9 @@ int main(){
                                 exibirPedido(p);
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
                         break;
                     }
 
@@ -330,6 +380,10 @@ int main(){
                         }
                         break;
                     }
+
+                    case 0:
+                        pausa = 0; 
+                        break;  
                     
                     default:
                         printf("Opcao invalida!\n");
@@ -340,7 +394,7 @@ int main(){
 
             case 4:{
                 printf("\n=============================\n");
-                printf("             PIZZA            ");
+                printf("            PIZZA              ");
                 printf("\n=============================\n");
                 printf("1. Cadastrar pizza\n");
                 printf("2. Listar pizzas\n");          
@@ -351,6 +405,8 @@ int main(){
                 printf("7. Listar pizza por categoria\n");
                 printf("8. Listar pizza por tamanho\n");
                 printf("0. Voltar\n");
+                printf("-----------------------------\n");
+                printf("Escolha uma opcao: ");
 
                 int opcaoPizza;
 
@@ -401,6 +457,9 @@ int main(){
                                 salvarTudo(&listaC, &listaP, &listaB, &pedidos);
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
                         
                         break;
                     }
@@ -414,6 +473,10 @@ int main(){
                                 salvarTudo(&listaC, &listaP, &listaB, &pedidos);
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
+
                         break;
                     }
                     
@@ -431,6 +494,10 @@ int main(){
                                 exibirPizza(p);
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
+
                         break;
                     }
 
@@ -446,6 +513,10 @@ int main(){
                                 default: printf("Opcao invalida!\n");
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
+
                         break;
                     }
 
@@ -461,8 +532,16 @@ int main(){
                                 default: printf("Opcao invalida!\n");
                             }
                         }
+                        else{
+                            printf("Entrada invalida!\n");
+                        }
+
                         break;
                     }
+
+                    case 0:
+                        pausa = 0; 
+                        break;
 
                     default:
                         printf("Opcao invalida!\n");
@@ -472,12 +551,17 @@ int main(){
             }
 
             case 0:
+                pausa = 0;
                 break;
 
             default: {
                 printf("Opcao invalida!\n");
                 break;
             }
+        }
+
+        if(pausa && opcao != 0){
+            pausar();
         }
     }
     
@@ -493,9 +577,9 @@ int main(){
 
 static void exibirMenuOpcao(void) {
     printf("\n=============================\n");
-    printf("           CATEGORIA          \n");
+    printf("        PIZZARIA IFPR       \n");
     printf("=============================\n");
-    printf("1.Cliente\n");
+    printf("1. Cliente\n");
     printf("2. Bebida\n");
     printf("3. Pedido\n");
     printf("4. Pizza\n");
@@ -527,6 +611,5 @@ static int salvarTudo(const TClientes *clientes, const TListaPizzas *pizzas, con
     if(!ok){
         printf("Erro ao salvar os dados.\n");
     }
-
     return ok;
 }

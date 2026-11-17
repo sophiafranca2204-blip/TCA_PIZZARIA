@@ -193,7 +193,7 @@ int cadastrarPizza(TListaPizzas *pizzas){
     char *ingrediente;
     int tam;
     do{
-        printf("Digite o ingrediente: ");
+        printf("Digite o ingrediente (Enter para finalizar):  ");
         ingrediente = lerTexto();
 
         if(ingrediente == NULL){
@@ -541,7 +541,7 @@ int alterarPizza(TListaPizzas *pizzas, int codigo){
                 int tam;
 
                 do{
-                    printf("Digite o ingrediente: ");
+                    printf("Digite o ingrediente (Enter para finalizar):  ");
                     ingrediente = lerTexto();
                     
                     if(ingrediente == NULL){
@@ -740,6 +740,10 @@ static int lerPizzaArquivo(FILE *arq, TPizza *p){
         ok = 0;
     }
 
+    if(ok && !lerSeparadorArquivo(arq)){
+        ok = 0;
+    }
+
     if(!ok){
         liberarIngredientes(&p->ingredientes);
         free(p->nome);
@@ -779,6 +783,8 @@ int salvarPizzas(const TListaPizzas *pizzas, const char *arquivo){
         }
 
         fprintf(arq, "%.2f\n", p->preco);
+
+        escreverSeparador(arq);
     }
 
     fclose(arq);

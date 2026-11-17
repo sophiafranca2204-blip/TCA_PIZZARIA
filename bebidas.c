@@ -596,6 +596,10 @@ static int lerBebidaArquivo(FILE *arq, TBebida *b){
         ok = 0;
     }
 
+    if(ok && !lerSeparadorArquivo(arq)){
+        ok = 0;
+    }
+
     if(!ok){
         free(b->nome);
         b->nome = NULL;
@@ -628,7 +632,11 @@ int salvarBebidas(const TListaBebidas *bebidas, const char *arquivo){
         fprintf(arq, "%d\n", b->codigoBebida);
         fprintf(arq, "%.2f\n", b->teorAlcoolico);
         fprintf(arq, "%d\n", b->volumeMl);
+
+        escreverSeparador(arq);
+
     }
+
     fclose(arq);
     return 1;
 }

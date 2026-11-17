@@ -10,4 +10,10 @@ char *lerLinhaArquivo(FILE *arq);
 int lerInteiroArquivo(FILE *arq, int *valor);
 int lerDecimalArquivo(FILE *arq, float *valor);
 
+void limparTela(void);
+void pausar(void);
+
+void escreverSeparador(FILE *arq);
+int lerSeparadorArquivo(FILE *arq);
+
 #endif
